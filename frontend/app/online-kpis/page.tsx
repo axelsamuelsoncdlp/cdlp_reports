@@ -80,12 +80,11 @@ export default function OnlineKPIs() {
     { key: 'sessions', label: 'Sessions', format: (val: number) => (val / 1000).toFixed(1) },
     { key: 'aov_new_customer', label: 'AOV New Customer', format: (val: number) => Math.round(val).toString() },
     { key: 'aov_returning_customer', label: 'AOV Returning Customer', format: (val: number) => Math.round(val).toString() },
-    { key: 'cos', label: 'Marketing Spend', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
+    { key: 'cos', label: 'Cost of Sales', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
     { key: 'conversion_rate', label: 'Conversion Rate', format: (val: number) => val.toFixed(1) + '%' },
     { key: 'new_customers', label: 'New Customers', format: (val: number) => val.toLocaleString() },
     { key: 'returning_customers', label: 'Returning Customers', format: (val: number) => val.toLocaleString() },
-    { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => Math.round(val).toString() },
-    { key: 'total_orders', label: 'Total Orders', format: (val: number) => val.toLocaleString() }
+    { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => Math.round(val).toString() }
   ]
 
   if (loading) {
@@ -139,7 +138,7 @@ export default function OnlineKPIs() {
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
         {kpiLabels.map((kpi, index) => {
-          // Data comes in correct order W35->W42 from backend
+          // Reverse data to show W35 on left, W42 on right
           const chartData = kpisData.kpis.map(k => {
             const weekNum = k.week.split('-')[1]
             const currentValue = k[kpi.key as keyof typeof k] as number
@@ -150,7 +149,7 @@ export default function OnlineKPIs() {
               current: currentValue,
               lastYear: lastYearValue
             }
-          })
+          }).reverse()
 
           const chartConfig = {
             current: {
@@ -185,7 +184,6 @@ export default function OnlineKPIs() {
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
-                      tickFormatter={(value) => value.slice(0, 3)}
                     />
                     <ChartTooltip
                       cursor={false}
