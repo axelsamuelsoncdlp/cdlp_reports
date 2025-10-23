@@ -114,9 +114,9 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
                 dema_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
                 logger.info(f"Pre-computed ISO weeks for DEMA data: {dema_df.shape}")
             
-            if not shopify_df.empty and 'Date' in shopify_df.columns:
-                shopify_df['Date'] = pd.to_datetime(shopify_df['Date'], errors='coerce')
-                iso_cal = shopify_df['Date'].dt.isocalendar()
+            if not shopify_df.empty and 'Day' in shopify_df.columns:
+                shopify_df['Day'] = pd.to_datetime(shopify_df['Day'], errors='coerce')
+                iso_cal = shopify_df['Day'].dt.isocalendar()
                 shopify_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
                 logger.info(f"Pre-computed ISO weeks for Shopify data: {shopify_df.shape}")
                 

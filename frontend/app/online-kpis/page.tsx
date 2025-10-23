@@ -77,7 +77,7 @@ export default function OnlineKPIs() {
   }, [periods, selectedWeek])
 
   const kpiLabels = [
-    { key: 'sessions', label: 'Sessions', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
+    { key: 'sessions', label: 'Sessions', format: (val: number) => (val / 1000).toFixed(1) },
     { key: 'aov_new_customer', label: 'AOV New Customer', format: (val: number) => Math.round(val).toString() },
     { key: 'aov_returning_customer', label: 'AOV Returning Customer', format: (val: number) => Math.round(val).toString() },
     { key: 'cos', label: 'Marketing Spend', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
