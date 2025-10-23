@@ -6,24 +6,42 @@ import FileUpload from '@/components/FileUpload'
 import FileMetadata from '@/components/FileMetadata'
 import PeriodSelector from '@/components/PeriodSelector'
 import { Separator } from '@/components/ui/separator'
-import { Loader2 } from 'lucide-react'
 
 export default function Settings() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
   const [periods, setPeriods] = useState(null)
   const [metadata, setMetadata] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
 
   const loadMetadata = async () => {
-    setLoading(true)
+    // Check cache first
+    const cacheKey = `file_metadata_${selectedWeek}`
+    const cached = localStorage.getItem(cacheKey)
+    
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached)
+        const cacheAge = Date.now() - parsed.timestamp
+        // Cache for 1 hour
+        if (cacheAge < 60 * 60 * 1000) {
+          setMetadata(parsed.data)
+          return
+        }
+      } catch (err) {
+        console.warn('Failed to load cached metadata:', err)
+      }
+    }
+    
     try {
       const response = await fetch(`http://localhost:8000/api/file-metadata?week=${selectedWeek}`)
       const data = await response.json()
       setMetadata(data)
+      // Save to cache
+      localStorage.setItem(cacheKey, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }))
     } catch (error) {
       console.error('Failed to load metadata:', error)
-    } finally {
-      setLoading(false)
     }
   }
 
@@ -72,12 +90,7 @@ export default function Settings() {
                   onUploadSuccess={loadMetadata}
                 />
                 
-                {loading ? (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Loading status...
-                  </div>
-                ) : metadata && metadata[ft.type] ? (
+                {metadata && metadata[ft.type] ? (
                   <FileMetadata
                     filename={metadata[ft.type].filename}
                     firstDate={metadata[ft.type].first_date}
@@ -85,11 +98,11 @@ export default function Settings() {
                     uploadedAt={metadata[ft.type].uploaded_at}
                     rowCount={metadata[ft.type].row_count}
                   />
-                ) : (
+                ) : metadata ? (
                   <div className="text-sm text-gray-500 italic">
                     No file uploaded yet
                   </div>
-                )}
+                ) : null}
               </div>
             ))}
           </div>

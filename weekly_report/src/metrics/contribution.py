@@ -143,15 +143,30 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
     gross_revenue_returning = returning_customer_df['Gross Revenue'].sum()
     gross_revenue_total = online_df['Gross Revenue'].sum()
     
-    # Get GM2 from dema_gm2 data
-    gm2_total = dema_gm2_df['Gross margin 2 - Dema MTA'].sum() if not dema_gm2_df.empty and 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
+    # Get GM2 from dema_gm2 data - check if we have split by customer type
+    gm2_new = 0
+    gm2_returning = 0
+    gm2_total = 0
+    
+    if not dema_gm2_df.empty:
+        # Check if we have customer type split
+        if 'New vs Returning Customer' in dema_gm2_df.columns:
+            # New format with customer type split
+            new_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
+            returning_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'Returning']
+            
+            gm2_new = new_rows['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
+            gm2_returning = returning_rows['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
+        else:
+            # Old format - allocate proportionally based on gross revenue
+            gm2_total = dema_gm2_df['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
+            gm2_new = (gm2_total * gross_revenue_new / gross_revenue_total) if gross_revenue_total > 0 else 0
+            gm2_returning = (gm2_total * gross_revenue_returning / gross_revenue_total) if gross_revenue_total > 0 else 0
+    
+    gm2_total = gm2_new + gm2_returning
     
     # Get marketing spend
     marketing_spend = dema_df['Marketing spend'].sum() if not dema_df.empty and 'Marketing spend' in dema_df.columns else 0
-    
-    # Allocate GM2 proportionally based on gross revenue
-    gm2_new = (gm2_total * gross_revenue_new / gross_revenue_total) if gross_revenue_total > 0 else 0
-    gm2_returning = (gm2_total * gross_revenue_returning / gross_revenue_total) if gross_revenue_total > 0 else 0
     
     # Calculate GM3 (Contribution)
     # Marketing spend allocation: 70% new, 30% returning
