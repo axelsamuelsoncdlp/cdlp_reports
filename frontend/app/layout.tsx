@@ -1,6 +1,8 @@
 import { Inter } from 'next/font/google'
 import './globals.css'
 import SidebarLayout from '@/components/SidebarLayout'
+import { DataCacheProvider } from '@/contexts/DataCacheContext'
+import LayoutContent from '@/components/LayoutContent'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -17,9 +19,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <SidebarLayout>
-          {children}
-        </SidebarLayout>
+        <DataCacheProvider>
+          <LayoutContent>
+            <SidebarLayout>
+              {children}
+            </SidebarLayout>
+          </LayoutContent>
+        </DataCacheProvider>
       </body>
     </html>
   )

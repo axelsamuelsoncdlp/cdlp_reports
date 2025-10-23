@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { getTable1Metrics, type MetricsResponse, type PeriodsResponse } from '@/lib/api'
+import { useEffect } from 'react'
+import { useMetrics, useDataCache } from '@/contexts/DataCacheContext'
+import { type PeriodsResponse } from '@/lib/api'
 
 interface MetricsPreviewProps {
   periods: PeriodsResponse
   baseWeek: string
-  onMetricsChange: (metrics: MetricsResponse | null) => void
+  onMetricsChange: (metrics: any) => void
 }
 
 const METRIC_LABELS = [
@@ -46,122 +47,13 @@ export default function MetricsPreview({
   baseWeek, 
   onMetricsChange 
 }: MetricsPreviewProps) {
-  const [metrics, setMetrics] = useState<MetricsResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const { metrics } = useMetrics()
+  const { refreshData, clearCache } = useDataCache()
 
-  // Cache key for localStorage
-  const getCacheKey = (week: string) => `metrics_${week}`
-
-  // Load metrics from cache or API
-  const loadMetrics = useCallback(async (forceRefresh = false) => {
-    const cacheKey = getCacheKey(baseWeek)
-    
-    // Try to load from cache first (unless force refresh)
-    if (!forceRefresh) {
-      try {
-        const cachedData = localStorage.getItem(cacheKey)
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData)
-          // Check if cache is less than 1 hour old
-          const cacheAge = Date.now() - parsed.timestamp
-          if (cacheAge < 60 * 60 * 1000) { // 1 hour
-            setMetrics(parsed.data)
-            onMetricsChange(parsed.data)
-            return
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to load from cache:', err)
-      }
-    }
-
-    // Load from API
-    setLoading(true)
-    setError(null)
-    
-    try {
-      const periodsList = ['actual', 'last_week', 'last_year', 'year_2023']
-      const metricsData = await getTable1Metrics(baseWeek, periodsList, true) // Include YTD
-      setMetrics(metricsData)
-      onMetricsChange(metricsData)
-      
-      // Save to cache
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({
-          data: metricsData,
-          timestamp: Date.now()
-        }))
-      } catch (err) {
-        console.warn('Failed to save to cache:', err)
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch metrics')
-      onMetricsChange(null)
-    } finally {
-      setLoading(false)
-    }
-  }, [baseWeek, onMetricsChange])
-
-  const fetchMetrics = async () => {
-    await loadMetrics(false) // Use cache if available
-  }
-
-  const clearAllCache = () => {
-    try {
-      // Clear all metrics cache
-      const keys = Object.keys(localStorage)
-      keys.forEach(key => {
-        if (key.startsWith('metrics_') || key.startsWith('markets_') || key.startsWith('online_kpis_')) {
-          localStorage.removeItem(key)
-        }
-      })
-      
-      // Clear current metrics
-      setMetrics(null)
-      onMetricsChange(null)
-      
-      // Reload data
-      loadMetrics(true)
-      
-      console.log('All cache cleared')
-    } catch (err) {
-      console.error('Failed to clear cache:', err)
-    }
-  }
-
-  const refreshData = async () => {
-    try {
-      setLoading(true)
-      setError(null)
-      
-      // Clear cache for this week (both metrics and markets)
-      const cacheKey = getCacheKey(baseWeek)
-      localStorage.removeItem(cacheKey)
-      localStorage.removeItem(`markets_${baseWeek}`)
-      localStorage.removeItem(`online_kpis_${baseWeek}`)
-      
-      // Clear server cache
-      await fetch(`http://localhost:8000/api/cache/invalidate/${baseWeek}`, {
-        method: 'POST'
-      })
-      
-      // Load fresh data
-      await loadMetrics(true) // Force refresh
-    } catch (err) {
-      setError('Failed to refresh data')
-      console.error('Refresh error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  // Notify parent when metrics change
   useEffect(() => {
-    if (periods) {
-      // Auto-load data (will use cache if available)
-      loadMetrics(false)
-    }
-  }, [periods, baseWeek, onMetricsChange, loadMetrics])
+    onMetricsChange(metrics)
+  }, [metrics, onMetricsChange])
 
   const calculateGrowthPercentage = (current: number, previous: number): number | null => {
     if (previous === 0) return null
@@ -277,31 +169,16 @@ export default function MetricsPreview({
           <div className="flex items-center gap-2">
             {/* Cache status indicator */}
             <div className="text-xs text-yellow-700">
-              {(() => {
-                const cacheKey = getCacheKey(baseWeek)
-                try {
-                  const cachedData = localStorage.getItem(cacheKey)
-                  if (cachedData) {
-                    const parsed = JSON.parse(cachedData)
-                    const cacheAge = Date.now() - parsed.timestamp
-                    const ageMinutes = Math.floor(cacheAge / (60 * 1000))
-                    return `Cached ${ageMinutes}m ago`
-                  }
-                } catch (err) {
-                  // Ignore cache errors
-                }
-                return 'No cache'
-              })()}
+              Data loaded from cache
             </div>
             <button
-              onClick={refreshData}
-              disabled={loading}
-              className="px-3 py-1 text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded-md disabled:opacity-50"
+              onClick={() => refreshData()}
+              className="px-3 py-1 text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded-md"
             >
-              {loading ? 'Refreshing...' : 'Refresh Data'}
+              Refresh Data
             </button>
             <button
-              onClick={clearAllCache}
+              onClick={() => clearCache()}
               className="px-3 py-1 text-xs bg-red-200 hover:bg-red-300 text-red-800 rounded-md"
             >
               Clear Cache

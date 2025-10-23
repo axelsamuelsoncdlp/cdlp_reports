@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getPeriods, getOnlineKPIs, type OnlineKPIsResponse } from '@/lib/api'
+import { useKPIs } from '@/contexts/DataCacheContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
@@ -9,72 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 
 export default function OnlineKPIs() {
-  const [selectedWeek, setSelectedWeek] = useState('2025-42')
-  const [periods, setPeriods] = useState(null)
-  const [kpisData, setKpisData] = useState<OnlineKPIsResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  // Load periods on mount
-  useEffect(() => {
-    const loadPeriods = async () => {
-      try {
-        const data = await getPeriods(selectedWeek)
-        setPeriods(data)
-      } catch (err) {
-        console.error('Failed to load periods:', err)
-      }
-    }
-    loadPeriods()
-  }, [selectedWeek])
-
-  // Load KPIs data
-  useEffect(() => {
-    if (!periods) return
-
-    const loadKPIs = async () => {
-      // Check cache first BEFORE setting loading state
-      const cacheKey = `online_kpis_${selectedWeek}`
-      try {
-        const cachedData = localStorage.getItem(cacheKey)
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData)
-          const cacheAge = Date.now() - parsed.timestamp
-          if (cacheAge < 60 * 60 * 1000) { // 1 hour
-            setKpisData(parsed.data)
-            return // Don't show loading if cached
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to load from cache:', err)
-      }
-      
-      // Only show loading if we need to fetch from API
-      setLoading(true)
-      setError(null)
-      
-      try {
-        const data = await getOnlineKPIs(selectedWeek, 8)
-        setKpisData(data)
-        
-        // Cache the data
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            data: data,
-            timestamp: Date.now()
-          }))
-        } catch (err) {
-          console.warn('Failed to save to cache:', err)
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch Online KPIs')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadKPIs()
-  }, [periods, selectedWeek])
+  const { kpis: kpisData } = useKPIs()
 
   const kpiLabels = [
     { key: 'sessions', label: 'Sessions', format: (val: number) => (val / 1000).toFixed(1) },
@@ -88,7 +22,7 @@ export default function OnlineKPIs() {
     { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => Math.round(val).toString() }
   ]
 
-  if (loading) {
+  if (!kpisData) {
     return (
       <div className="space-y-8">
         <div className="flex items-center gap-3 mb-6">
@@ -110,26 +44,6 @@ export default function OnlineKPIs() {
               </CardContent>
             </Card>
           ))}
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="space-y-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="text-red-600">{error}</div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!kpisData) {
-    return (
-      <div className="space-y-8">
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">No KPIs data available</p>
         </div>
       </div>
     )

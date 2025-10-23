@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getTopMarkets, type MarketsResponse } from '@/lib/api'
+import { useMarkets } from '@/contexts/DataCacheContext'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 
@@ -10,11 +9,7 @@ interface TopMarketsTableProps {
 }
 
 export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
-  const [marketsData, setMarketsData] = useState<MarketsResponse | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const getCacheKey = (week: string) => `markets_${week}`
+  const { markets: marketsData } = useMarkets()
 
   const formatValue = (value: number): string => {
     if (value === 0) return '0'
@@ -54,54 +49,7 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
     return `W${parts[1]}`
   }
 
-  useEffect(() => {
-    if (!baseWeek) return
-
-    // Try to load from cache first
-    const cacheKey = getCacheKey(baseWeek)
-    try {
-      const cachedData = localStorage.getItem(cacheKey)
-      if (cachedData) {
-        const parsed = JSON.parse(cachedData)
-        const cacheAge = Date.now() - parsed.timestamp
-        if (cacheAge < 60 * 60 * 1000) { // 1 hour
-          setMarketsData(parsed.data)
-          return
-        }
-      }
-    } catch (err) {
-      console.warn('Failed to load from cache:', err)
-    }
-
-    // Load from API
-    const loadMarkets = async () => {
-      setLoading(true)
-      setError(null)
-      
-      try {
-        const data = await getTopMarkets(baseWeek, 8)
-        setMarketsData(data)
-        
-        // Save to cache
-        try {
-          localStorage.setItem(cacheKey, JSON.stringify({
-            data: data,
-            timestamp: Date.now()
-          }))
-        } catch (err) {
-          console.warn('Failed to save to cache:', err)
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to fetch markets')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    loadMarkets()
-  }, [baseWeek])
-
-  if (loading) {
+  if (!marketsData || !marketsData.markets.length) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -114,22 +62,6 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
             <Skeleton key={i} className="h-10 w-full" />
           ))}
         </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-md p-4">
-        <div className="text-red-800 text-sm">{error}</div>
-      </div>
-    )
-  }
-
-  if (!marketsData || !marketsData.markets.length) {
-    return (
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-        <div className="text-blue-800 text-sm">No markets data available</div>
       </div>
     )
   }
