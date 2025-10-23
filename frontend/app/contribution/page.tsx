@@ -19,6 +19,8 @@ export default function Contribution() {
   ]
 
   // Reorder labels for custom layout
+  // First row: Gross Revenue New Customer | Total New Customer Contribution | Total Customer Contribution
+  // Second row: Gross Revenue Returning Customer | Total Returning Customer Contribution | (empty)
   const layoutOrder = [
     contributionLabels[0], // Gross Revenue New Customer
     contributionLabels[2], // Total New Customer Contribution
@@ -141,7 +143,6 @@ export default function Contribution() {
 
       {/* Second row: Bottom 2 graphs, centered */}
       <div className="grid grid-cols-3 gap-6">
-        <div></div> {/* Empty spacer */}
         {layoutOrder.slice(3).map((label, index) => {
           const chartData = contributions.contributions.map(k => {
             const weekNum = k.week.split('-')[1]
