@@ -5,6 +5,8 @@ import { getPeriods, getOnlineKPIs, type OnlineKPIsResponse } from '@/lib/api'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Loader2 } from 'lucide-react'
 
 export default function OnlineKPIs() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
@@ -62,8 +64,25 @@ export default function OnlineKPIs() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">Loading Online KPIs...</p>
+        <div className="flex items-center gap-3 mb-6">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">Loading Online KPIs</h2>
+            <p className="text-sm text-gray-600">Processing data from Qlik, DEMA, and Shopify...</p>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-3 gap-6">
+          {kpiLabels.map((kpi, index) => (
+            <Card key={index}>
+              <CardHeader>
+                <Skeleton className="h-5 w-48" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-48 w-full" />
+              </CardContent>
+            </Card>
+          ))}
         </div>
       </div>
     )

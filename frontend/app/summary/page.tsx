@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import MetricsPreview from '@/components/MetricsPreview'
 import { getPeriods } from '@/lib/api'
+import { Loader2 } from 'lucide-react'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function Summary() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
@@ -34,8 +36,17 @@ export default function Summary() {
           />
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow p-6 text-center">
-          <p className="text-gray-600">Loading periods...</p>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Loading Summary Metrics</h2>
+              <p className="text-sm text-gray-600">Initializing data...</p>
+            </div>
+          </div>
+          <div className="bg-white rounded-lg shadow p-6">
+            <Skeleton className="h-96 w-full" />
+          </div>
         </div>
       )}
     </div>
