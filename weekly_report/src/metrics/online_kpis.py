@@ -165,13 +165,18 @@ def calculate_week_kpis(qlik_df: pd.DataFrame, shopify_df: pd.DataFrame, dema_df
     conversion_rate = (unique_orders / sessions * 100) if sessions > 0 else 0
     
     # COS (Cost of Sale) - from DEMA spend
-    if not dema_df.empty and 'Cost' in dema_df.columns:
+    if not dema_df.empty and 'Marketing spend' in dema_df.columns:
+        cos = dema_df['Marketing spend'].sum()
+    elif not dema_df.empty and 'Cost' in dema_df.columns:
         cos = dema_df['Cost'].sum()
     else:
         cos = 0
     
     # New Customer CAC (Customer Acquisition Cost)
     new_customer_cac = cos / new_customers if new_customers > 0 else 0
+    
+    # Total Orders
+    total_orders = online_df['Order No'].nunique()
     
     return {
         'week': week_str,
@@ -182,6 +187,7 @@ def calculate_week_kpis(qlik_df: pd.DataFrame, shopify_df: pd.DataFrame, dema_df
         'new_customers': new_customers,
         'returning_customers': returning_customers,
         'sessions': sessions,
-        'new_customer_cac': new_customer_cac
+        'new_customer_cac': new_customer_cac,
+        'total_orders': total_orders
     }
 

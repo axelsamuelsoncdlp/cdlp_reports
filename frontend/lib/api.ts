@@ -43,6 +43,7 @@ export interface OnlineKPIsResponse {
     returning_customers: number
     sessions: number
     new_customer_cac: number
+    total_orders: number
     last_year: {
       week: string
       aov_new_customer: number
@@ -53,6 +54,7 @@ export interface OnlineKPIsResponse {
       returning_customers: number
       sessions: number
       new_customer_cac: number
+      total_orders: number
     } | null
   }>
   period_info: {

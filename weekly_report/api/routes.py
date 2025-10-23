@@ -67,6 +67,7 @@ class KPIData(BaseModel):
     returning_customers: int
     sessions: int
     new_customer_cac: float
+    total_orders: int
     last_year: Optional[Dict[str, Any]] = None
 
 

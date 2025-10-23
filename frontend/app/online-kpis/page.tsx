@@ -50,12 +50,13 @@ export default function OnlineKPIs() {
   const kpiLabels = [
     { key: 'aov_new_customer', label: 'AOV New Customer', format: (val: number) => `SEK ${val.toFixed(0)}` },
     { key: 'aov_returning_customer', label: 'AOV Returning Customer', format: (val: number) => `SEK ${val.toFixed(0)}` },
-    { key: 'cos', label: 'COS', format: (val: number) => `SEK ${(val / 1000).toFixed(0)}k` },
+    { key: 'cos', label: 'Marketing Spend', format: (val: number) => `SEK ${(val / 1000).toFixed(0)}k` },
     { key: 'conversion_rate', label: 'Conversion Rate', format: (val: number) => `${val.toFixed(1)}%` },
     { key: 'new_customers', label: 'New Customers', format: (val: number) => val.toLocaleString() },
     { key: 'returning_customers', label: 'Returning Customers', format: (val: number) => val.toLocaleString() },
     { key: 'sessions', label: 'Sessions', format: (val: number) => val.toLocaleString() },
-    { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => `SEK ${val.toFixed(0)}` }
+    { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => `SEK ${val.toFixed(0)}` },
+    { key: 'total_orders', label: 'Total Orders', format: (val: number) => val.toLocaleString() }
   ]
 
   if (loading) {
