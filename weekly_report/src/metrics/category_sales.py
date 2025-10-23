@@ -97,11 +97,15 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                 if category == '-' or pd.isna(category):
                     continue
                 
-                if gender not in ['MEN', 'WOMEN']:
-                    continue
-                
-                key = f"{gender}_{category}"
-                week_result['categories'][key] = float(row['Gross Revenue'])
+                # Include UNISEX and KIDS in MEN category
+                if gender in ['MEN', 'UNISEX', 'KIDS']:
+                    key = f"MEN_{category}"
+                    if key not in week_result['categories']:
+                        week_result['categories'][key] = 0
+                    week_result['categories'][key] += float(row['Gross Revenue'])
+                elif gender == 'WOMEN':
+                    key = f"{gender}_{category}"
+                    week_result['categories'][key] = float(row['Gross Revenue'])
             
             # Get last year data
             last_year = target_year - 1
@@ -127,11 +131,15 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                         if category == '-' or pd.isna(category):
                             continue
                         
-                        if gender not in ['MEN', 'WOMEN']:
-                            continue
-                        
-                        key = f"{gender}_{category}"
-                        last_year_result['categories'][key] = float(row['Gross Revenue'])
+                        # Include UNISEX and KIDS in MEN category
+                        if gender in ['MEN', 'UNISEX', 'KIDS']:
+                            key = f"MEN_{category}"
+                            if key not in last_year_result['categories']:
+                                last_year_result['categories'][key] = 0
+                            last_year_result['categories'][key] += float(row['Gross Revenue'])
+                        elif gender == 'WOMEN':
+                            key = f"{gender}_{category}"
+                            last_year_result['categories'][key] = float(row['Gross Revenue'])
                     
                     week_result['last_year'] = last_year_result
                 else:
