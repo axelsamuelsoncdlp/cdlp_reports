@@ -155,11 +155,11 @@ export default function OnlineKPIs() {
           const chartConfig = {
             current: {
               label: "Current Year",
-              color: "var(--chart-1)",
+              color: "#4B5563", // Dark gray
             },
             lastYear: {
               label: "Last Year",
-              color: "var(--chart-2)",
+              color: "#F97316", // Orange
             },
           } satisfies ChartConfig
 
@@ -194,13 +194,13 @@ export default function OnlineKPIs() {
                     <Line
                       dataKey="current"
                       type="natural"
-                      stroke="var(--color-current)"
+                      stroke="#4B5563"
                       strokeWidth={2}
                     >
                       <LabelList
                         position="top"
                         offset={12}
-                        className="fill-foreground"
+                        fill="#4B5563"
                         fontSize={12}
                         formatter={(value: number) => kpi.format(value)}
                       />
@@ -208,7 +208,7 @@ export default function OnlineKPIs() {
                     <Line
                       dataKey="lastYear"
                       type="natural"
-                      stroke="var(--color-lastYear)"
+                      stroke="#F97316"
                       strokeWidth={2}
                       strokeDasharray="5 5"
                     />
