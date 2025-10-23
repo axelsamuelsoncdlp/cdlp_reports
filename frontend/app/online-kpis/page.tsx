@@ -33,12 +33,39 @@ export default function OnlineKPIs() {
     if (!periods) return
 
     const loadKPIs = async () => {
+      // Check cache first BEFORE setting loading state
+      const cacheKey = `online_kpis_${selectedWeek}`
+      try {
+        const cachedData = localStorage.getItem(cacheKey)
+        if (cachedData) {
+          const parsed = JSON.parse(cachedData)
+          const cacheAge = Date.now() - parsed.timestamp
+          if (cacheAge < 60 * 60 * 1000) { // 1 hour
+            setKpisData(parsed.data)
+            return // Don't show loading if cached
+          }
+        }
+      } catch (err) {
+        console.warn('Failed to load from cache:', err)
+      }
+      
+      // Only show loading if we need to fetch from API
       setLoading(true)
       setError(null)
       
       try {
         const data = await getOnlineKPIs(selectedWeek, 8)
         setKpisData(data)
+        
+        // Cache the data
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: data,
+            timestamp: Date.now()
+          }))
+        } catch (err) {
+          console.warn('Failed to save to cache:', err)
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to fetch Online KPIs')
       } finally {

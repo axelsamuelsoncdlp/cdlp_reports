@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { getTable1Metrics, type MetricsResponse, type PeriodsResponse } from '@/lib/api'
 
 interface MetricsPreviewProps {
@@ -54,7 +54,7 @@ export default function MetricsPreview({
   const getCacheKey = (week: string) => `metrics_${week}`
 
   // Load metrics from cache or API
-  const loadMetrics = async (forceRefresh = false) => {
+  const loadMetrics = useCallback(async (forceRefresh = false) => {
     const cacheKey = getCacheKey(baseWeek)
     
     // Try to load from cache first (unless force refresh)
@@ -101,7 +101,7 @@ export default function MetricsPreview({
     } finally {
       setLoading(false)
     }
-  }
+  }, [baseWeek, onMetricsChange])
 
   const fetchMetrics = async () => {
     await loadMetrics(false) // Use cache if available
@@ -112,7 +112,7 @@ export default function MetricsPreview({
       // Clear all metrics cache
       const keys = Object.keys(localStorage)
       keys.forEach(key => {
-        if (key.startsWith('metrics_') || key.startsWith('markets_')) {
+        if (key.startsWith('metrics_') || key.startsWith('markets_') || key.startsWith('online_kpis_')) {
           localStorage.removeItem(key)
         }
       })
@@ -139,6 +139,7 @@ export default function MetricsPreview({
       const cacheKey = getCacheKey(baseWeek)
       localStorage.removeItem(cacheKey)
       localStorage.removeItem(`markets_${baseWeek}`)
+      localStorage.removeItem(`online_kpis_${baseWeek}`)
       
       // Clear server cache
       await fetch(`http://localhost:8000/api/cache/invalidate/${baseWeek}`, {
@@ -157,25 +158,10 @@ export default function MetricsPreview({
 
   useEffect(() => {
     if (periods) {
-      // Try to load from cache first, don't auto-fetch from API
-      const cacheKey = getCacheKey(baseWeek)
-      try {
-        const cachedData = localStorage.getItem(cacheKey)
-        if (cachedData) {
-          const parsed = JSON.parse(cachedData)
-          const cacheAge = Date.now() - parsed.timestamp
-          if (cacheAge < 60 * 60 * 1000) { // 1 hour
-            setMetrics(parsed.data)
-            onMetricsChange(parsed.data)
-            return
-          }
-        }
-      } catch (err) {
-        console.warn('Failed to load from cache:', err)
-      }
-      // If no valid cache, don't auto-load - wait for user to click "Load Data"
+      // Auto-load data (will use cache if available)
+      loadMetrics(false)
     }
-  }, [periods, baseWeek, onMetricsChange])
+  }, [periods, baseWeek, onMetricsChange, loadMetrics])
 
   const calculateGrowthPercentage = (current: number, previous: number): number | null => {
     if (previous === 0) return null
