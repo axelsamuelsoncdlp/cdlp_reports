@@ -72,10 +72,6 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
             year_str = f"{year-1}-{week:02d}"
         last_year_weeks.append(year_str)
     
-    # Reverse to match order
-    weeks_to_analyze = weeks_to_analyze[::-1]
-    last_year_weeks = last_year_weeks[::-1]
-    
     logger.info(f"Calculating Online KPIs for weeks: {weeks_to_analyze}")
     logger.info(f"Last year weeks: {last_year_weeks}")
     
