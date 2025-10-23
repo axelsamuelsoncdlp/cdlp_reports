@@ -143,10 +143,12 @@ export default function OnlineKPIs() {
           const chartData = kpisData.kpis.map(k => {
             const weekNum = k.week.split('-')[1]
             const currentValue = k[kpi.key as keyof typeof k] as number
+            const lastYearValue = k.last_year?.[kpi.key as keyof typeof k.last_year] as number || 0
             
             return {
               week: `W${weekNum}`,
-              current: currentValue
+              current: currentValue,
+              lastYear: lastYearValue
             }
           }).reverse()
 
@@ -154,6 +156,10 @@ export default function OnlineKPIs() {
             current: {
               label: "Current Year",
               color: "var(--chart-1)",
+            },
+            lastYear: {
+              label: "Last Year",
+              color: "var(--chart-2)",
             },
           } satisfies ChartConfig
 
@@ -205,6 +211,18 @@ export default function OnlineKPIs() {
                         formatter={(value: number) => kpi.format(value)}
                       />
                     </Line>
+                    <Line
+                      dataKey="lastYear"
+                      type="natural"
+                      stroke="var(--color-lastYear)"
+                      strokeWidth={2}
+                      dot={{
+                        fill: "var(--color-lastYear)",
+                      }}
+                      activeDot={{
+                        r: 6,
+                      }}
+                    />
                   </LineChart>
                 </ChartContainer>
               </CardContent>
