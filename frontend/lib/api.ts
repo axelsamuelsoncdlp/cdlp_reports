@@ -111,6 +111,23 @@ export interface GenderSalesResponse {
   }
 }
 
+export interface MenCategorySalesData {
+  week: string
+  categories: Record<string, number>
+  last_year: {
+    week: string
+    categories: Record<string, number>
+  } | null
+}
+
+export interface MenCategorySalesResponse {
+  men_category_sales: MenCategorySalesData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export interface GeneratePDFResponse {
   success: boolean
   file_path: string
@@ -162,6 +179,14 @@ export async function getGenderSales(baseWeek: string, numWeeks: number = 8): Pr
   const response = await fetch(`${API_BASE_URL}/api/gender-sales?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Gender Sales data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getMenCategorySales(baseWeek: string, numWeeks: number = 8): Promise<MenCategorySalesResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/men-category-sales?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Men Category Sales data: ${response.statusText}`)
   }
   return response.json()
 }
