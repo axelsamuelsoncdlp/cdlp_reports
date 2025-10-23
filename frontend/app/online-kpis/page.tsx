@@ -81,7 +81,7 @@ export default function OnlineKPIs() {
     { key: 'aov_new_customer', label: 'AOV New Customer', format: (val: number) => Math.round(val).toString() },
     { key: 'aov_returning_customer', label: 'AOV Returning Customer', format: (val: number) => Math.round(val).toString() },
     { key: 'cos', label: 'Marketing Spend', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'conversion_rate', label: 'Conversion Rate', format: (val: number) => Math.round(val * 100).toString() + '%' },
+    { key: 'conversion_rate', label: 'Conversion Rate', format: (val: number) => val.toFixed(1) + '%' },
     { key: 'new_customers', label: 'New Customers', format: (val: number) => val.toLocaleString() },
     { key: 'returning_customers', label: 'Returning Customers', format: (val: number) => val.toLocaleString() },
     { key: 'new_customer_cac', label: 'New Customer CAC', format: (val: number) => Math.round(val).toString() },
@@ -139,7 +139,7 @@ export default function OnlineKPIs() {
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
         {kpiLabels.map((kpi, index) => {
-          // Reverse data to show latest week (42) on the right
+          // Data is already in correct order (W35 to W42 from left to right)
           const chartData = kpisData.kpis.map(k => {
             const weekNum = k.week.split('-')[1]
             const currentValue = k[kpi.key as keyof typeof k] as number
@@ -150,7 +150,7 @@ export default function OnlineKPIs() {
               current: currentValue,
               lastYear: lastYearValue
             }
-          }).reverse()
+          })
 
           const chartConfig = {
             current: {
