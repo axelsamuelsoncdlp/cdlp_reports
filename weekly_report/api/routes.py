@@ -471,6 +471,12 @@ async def upload_file(
         target_dir = config.raw_data_path / file_type
         target_dir.mkdir(parents=True, exist_ok=True)
         
+        # Delete existing files in the directory (except .DS_Store)
+        for existing_file in target_dir.glob("*.*"):
+            if not existing_file.name.startswith('.'):
+                existing_file.unlink()
+                logger.info(f"Deleted old file: {existing_file}")
+        
         # Save file
         target_path = target_dir / file.filename
         with target_path.open("wb") as buffer:
