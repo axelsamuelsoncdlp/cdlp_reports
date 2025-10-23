@@ -463,6 +463,8 @@ async def get_file_metadata(week: str = Query(...)):
             type_path = raw_path / file_type
             if type_path.exists():
                 files = list(type_path.glob("*.*"))
+                # Filter out hidden files (.DS_Store, etc.)
+                files = [f for f in files if not f.name.startswith('.')]
                 if files:
                     file_info = extract_file_metadata(files[0], file_type)
                     metadata[file_type] = {
