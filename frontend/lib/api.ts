@@ -32,6 +32,35 @@ export interface MarketsResponse {
   }
 }
 
+export interface OnlineKPIsResponse {
+  kpis: Array<{
+    week: string
+    aov_new_customer: number
+    aov_returning_customer: number
+    cos: number
+    conversion_rate: number
+    new_customers: number
+    returning_customers: number
+    sessions: number
+    new_customer_cac: number
+    last_year: {
+      week: string
+      aov_new_customer: number
+      aov_returning_customer: number
+      cos: number
+      conversion_rate: number
+      new_customers: number
+      returning_customers: number
+      sessions: number
+      new_customer_cac: number
+    } | null
+  }>
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export interface GeneratePDFResponse {
   success: boolean
   file_path: string
@@ -59,6 +88,14 @@ export async function getTopMarkets(baseWeek: string, numWeeks: number = 8): Pro
   const response = await fetch(`${API_BASE_URL}/api/markets/top?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch markets: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getOnlineKPIs(baseWeek: string, numWeeks: number = 8): Promise<OnlineKPIsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/online-kpis?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Online KPIs: ${response.statusText}`)
   }
   return response.json()
 }

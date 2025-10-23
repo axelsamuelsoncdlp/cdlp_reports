@@ -4,7 +4,7 @@ from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from pathlib import Path
 import tempfile
 import os
@@ -13,6 +13,7 @@ from loguru import logger
 from weekly_report.src.periods.calculator import get_periods_for_week, get_week_date_range, get_ytd_periods_for_week, validate_iso_week
 from weekly_report.src.metrics.table1 import calculate_table1_for_periods, calculate_table1_for_periods_with_ytd
 from weekly_report.src.metrics.markets import calculate_top_markets_for_weeks
+from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -54,6 +55,24 @@ class MarketData(BaseModel):
 class MarketsResponse(BaseModel):
     markets: List[MarketData]  # Use explicit model instead of Dict[str, Any]
     period_info: Dict[str, str]
+
+
+class KPIData(BaseModel):
+    week: str
+    aov_new_customer: float
+    aov_returning_customer: float
+    cos: float
+    conversion_rate: float
+    new_customers: int
+    returning_customers: int
+    sessions: int
+    new_customer_cac: float
+    last_year: Optional[Dict[str, Any]] = None
+
+
+class OnlineKPIsResponse(BaseModel):
+    kpis: List[KPIData]
+    period_info: Dict[str, Any]
 
 
 # Initialize FastAPI app
@@ -332,6 +351,40 @@ async def get_top_markets(
     except Exception as e:
         import traceback
         logger.error(f"Error getting top markets for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/online-kpis", response_model=OnlineKPIsResponse)
+async def get_online_kpis(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Online KPIs for the last N weeks."""
+    
+    try:
+        # Validate input
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        # Load config to get data root
+        config = load_config(week=base_week)
+        
+        # Calculate Online KPIs
+        kpis_data = calculate_online_kpis_for_weeks(base_week, num_weeks, config.raw_data_path)
+        
+        response = OnlineKPIsResponse(**kpis_data)
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Online KPIs for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
