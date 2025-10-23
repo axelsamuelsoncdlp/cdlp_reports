@@ -12,22 +12,27 @@ export default function Settings() {
   const [periods, setPeriods] = useState(null)
   const [metadata, setMetadata] = useState<any>(null)
 
-  const loadMetadata = async () => {
+  const loadMetadata = async (clearCache = false) => {
     // Check cache first
     const cacheKey = `file_metadata_${selectedWeek}`
-    const cached = localStorage.getItem(cacheKey)
     
-    if (cached) {
-      try {
-        const parsed = JSON.parse(cached)
-        const cacheAge = Date.now() - parsed.timestamp
-        // Cache for 1 hour
-        if (cacheAge < 60 * 60 * 1000) {
-          setMetadata(parsed.data)
-          return
+    if (clearCache) {
+      localStorage.removeItem(cacheKey)
+    } else {
+      const cached = localStorage.getItem(cacheKey)
+      
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          const cacheAge = Date.now() - parsed.timestamp
+          // Cache for 1 hour
+          if (cacheAge < 60 * 60 * 1000) {
+            setMetadata(parsed.data)
+            return
+          }
+        } catch (err) {
+          console.warn('Failed to load cached metadata:', err)
         }
-      } catch (err) {
-        console.warn('Failed to load cached metadata:', err)
       }
     }
     
@@ -87,7 +92,7 @@ export default function Settings() {
                   fileTypeLabel={ft.label}
                   acceptedFormats={ft.formats}
                   currentWeek={selectedWeek}
-                  onUploadSuccess={loadMetadata}
+                  onUploadSuccess={() => loadMetadata(true)}
                 />
                 
                 {metadata && metadata[ft.type] ? (
