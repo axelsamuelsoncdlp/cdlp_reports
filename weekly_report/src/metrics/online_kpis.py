@@ -151,11 +151,21 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
         last_year_week = last_year_weeks[week_idx]
         last_year_qlik_df = filter_data_by_iso_week(qlik_df, last_year_week, 'Date')
         
+        # Filter Shopify data for last year
+        last_year_shopify_df = shopify_df.copy()
+        if not shopify_df.empty and 'iso_week' in shopify_df.columns:
+            last_year_shopify_df = shopify_df[shopify_df['iso_week'] == last_year_week].copy()
+        
+        # Filter DEMA data for last year
+        last_year_dema_df = dema_df.copy()
+        if not dema_df.empty and 'iso_week' in dema_df.columns:
+            last_year_dema_df = dema_df[dema_df['iso_week'] == last_year_week].copy()
+        
         if not last_year_qlik_df.empty:
             last_year_kpis = calculate_week_kpis(
                 last_year_qlik_df,
-                week_shopify_df,  # Use same shopify data
-                week_dema_df,  # Use same dema data
+                last_year_shopify_df,  # Use filtered shopify data for last year
+                last_year_dema_df,  # Use filtered dema data for last year
                 last_year_week
             )
             week_kpis['last_year'] = last_year_kpis
