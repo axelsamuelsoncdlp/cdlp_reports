@@ -43,12 +43,21 @@ export default function MenCategorySales() {
     Object.keys(week.categories).forEach(cat => allCategories.add(cat))
   })
 
-  const categories = Array.from(allCategories).sort()
+  // Calculate total sales for each category and sort by highest to lowest
+  const categoryTotals = Array.from(allCategories).map(category => {
+    const total = men_category_sales.men_category_sales.reduce((sum, week) => {
+      return sum + (week.categories[category] || 0)
+    }, 0)
+    return { category, total }
+  })
+
+  // Sort by total sales descending
+  const sortedCategories = categoryTotals.sort((a, b) => b.total - a.total).map(item => item.category)
 
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
-        {categories.map((category) => {
+        {sortedCategories.map((category, index) => {
           const chartData = men_category_sales.men_category_sales.map(g => {
             const weekNum = g.week.split('-')[1]
             const currentValue = g.categories[category] || 0
