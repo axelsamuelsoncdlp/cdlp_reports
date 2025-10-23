@@ -196,12 +196,6 @@ export default function OnlineKPIs() {
                       type="natural"
                       stroke="var(--color-current)"
                       strokeWidth={2}
-                      dot={{
-                        fill: "var(--color-current)",
-                      }}
-                      activeDot={{
-                        r: 6,
-                      }}
                     >
                       <LabelList
                         position="top"
@@ -216,12 +210,7 @@ export default function OnlineKPIs() {
                       type="natural"
                       stroke="var(--color-lastYear)"
                       strokeWidth={2}
-                      dot={{
-                        fill: "var(--color-lastYear)",
-                      }}
-                      activeDot={{
-                        r: 6,
-                      }}
+                      strokeDasharray="5 5"
                     />
                   </LineChart>
                 </ChartContainer>
