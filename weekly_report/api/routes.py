@@ -16,6 +16,7 @@ from weekly_report.src.periods.calculator import get_periods_for_week, get_week_
 from weekly_report.src.metrics.table1 import calculate_table1_for_periods, calculate_table1_for_periods_with_ytd
 from weekly_report.src.metrics.markets import calculate_top_markets_for_weeks
 from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_weeks
+from weekly_report.src.metrics.contribution import calculate_contribution_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -77,6 +78,21 @@ class KPIData(BaseModel):
 
 class OnlineKPIsResponse(BaseModel):
     kpis: List[KPIData]
+    period_info: Dict[str, Any]
+
+
+class ContributionData(BaseModel):
+    week: str
+    gross_revenue_new: float
+    gross_revenue_returning: float
+    contribution_new: float
+    contribution_returning: float
+    contribution_total: float
+    last_year: Optional[Dict[str, Any]] = None
+
+
+class ContributionResponse(BaseModel):
+    contributions: List[ContributionData]
     period_info: Dict[str, Any]
 
 
@@ -389,6 +405,36 @@ async def get_online_kpis(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Online KPIs for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/contribution", response_model=ContributionResponse)
+async def get_contribution(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Contribution metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        contribution_data = calculate_contribution_for_weeks(base_week, num_weeks, config.data_root)
+        
+        response = ContributionResponse(**contribution_data)
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Contribution metrics for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

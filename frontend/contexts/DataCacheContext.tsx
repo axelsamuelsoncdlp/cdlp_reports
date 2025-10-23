@@ -6,10 +6,12 @@ import {
   getTable1Metrics, 
   getTopMarkets, 
   getOnlineKPIs,
+  getContribution,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
-  type OnlineKPIsResponse
+  type OnlineKPIsResponse,
+  type ContributionResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
@@ -25,6 +27,7 @@ interface CacheData {
   metrics: MetricsResponse | null
   markets: MarketsResponse | null
   kpis: OnlineKPIsResponse | null
+  contribution: ContributionResponse | null
   timestamp: number
 }
 
@@ -33,6 +36,7 @@ interface DataCacheContextType {
   metrics: MetricsResponse | null
   markets: MarketsResponse | null
   kpis: OnlineKPIsResponse | null
+  contribution: ContributionResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -53,6 +57,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [metrics, setMetrics] = useState<MetricsResponse | null>(null)
   const [markets, setMarkets] = useState<MarketsResponse | null>(null)
   const [kpis, setKpis] = useState<OnlineKPIsResponse | null>(null)
+  const [contribution, setContribution] = useState<ContributionResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -99,6 +104,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setMetrics(cached.metrics)
         setMarkets(cached.markets)
         setKpis(cached.kpis)
+        setContribution(cached.contribution)
         return
       }
     }
@@ -150,10 +156,21 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       const kpisData = await getOnlineKPIs(week, 8)
       setKpis(kpisData)
 
+      // Step 5: Load Contribution
+      setLoadingProgress({ 
+        step: 'kpis', 
+        stepNumber: 5, 
+        totalSteps: 5, 
+        message: 'Loading contribution metrics...', 
+        percentage: 80 
+      })
+      const contributionData = await getContribution(week, 8)
+      setContribution(contributionData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 4, 
-        totalSteps: 4, 
+        stepNumber: 5, 
+        totalSteps: 5, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -164,6 +181,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         metrics: metricsData,
         markets: marketsData,
         kpis: kpisData,
+        contribution: contributionData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -187,6 +205,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setMetrics(null)
       setMarkets(null)
       setKpis(null)
+      setContribution(null)
     } catch (err) {
       console.warn('Failed to clear cache:', err)
     }
@@ -202,6 +221,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     metrics,
     markets,
     kpis,
+    contribution,
     loading,
     error,
     loadingProgress,
@@ -243,3 +263,7 @@ export function useKPIs() {
   return { kpis }
 }
 
+export function useContribution() {
+  const { contribution } = useDataCache()
+  return { contributions: contribution }
+}

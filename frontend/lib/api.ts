@@ -65,6 +65,31 @@ export interface OnlineKPIsResponse {
   }
 }
 
+export interface ContributionData {
+  week: string
+  gross_revenue_new: number
+  gross_revenue_returning: number
+  contribution_new: number
+  contribution_returning: number
+  contribution_total: number
+  last_year: {
+    week: string
+    gross_revenue_new: number
+    gross_revenue_returning: number
+    contribution_new: number
+    contribution_returning: number
+    contribution_total: number
+  } | null
+}
+
+export interface ContributionResponse {
+  contributions: ContributionData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export interface GeneratePDFResponse {
   success: boolean
   file_path: string
@@ -100,6 +125,14 @@ export async function getOnlineKPIs(baseWeek: string, numWeeks: number = 8): Pro
   const response = await fetch(`${API_BASE_URL}/api/online-kpis?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Online KPIs: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getContribution(baseWeek: string, numWeeks: number = 8): Promise<ContributionResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/contribution?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Contribution data: ${response.statusText}`)
   }
   return response.json()
 }
