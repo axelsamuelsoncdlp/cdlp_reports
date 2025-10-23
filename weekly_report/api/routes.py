@@ -518,10 +518,12 @@ async def get_file_metadata(week: str = Query(...)):
                 # Filter out hidden files (.DS_Store, etc.)
                 files = [f for f in files if not f.name.startswith('.')]
                 if files:
-                    file_info = extract_file_metadata(files[0], file_type)
+                    # Get the most recently modified file
+                    latest_file = max(files, key=lambda f: f.stat().st_mtime)
+                    file_info = extract_file_metadata(latest_file, file_type)
                     metadata[file_type] = {
-                        "filename": files[0].name,
-                        "uploaded_at": datetime.fromtimestamp(files[0].stat().st_mtime).isoformat(),
+                        "filename": latest_file.name,
+                        "uploaded_at": datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat(),
                         **file_info
                     }
         
