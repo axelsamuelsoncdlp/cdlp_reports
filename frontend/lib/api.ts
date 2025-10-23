@@ -90,6 +90,27 @@ export interface ContributionResponse {
   }
 }
 
+export interface GenderSalesData {
+  week: string
+  men_unisex_sales: number
+  women_sales: number
+  total_sales: number
+  last_year: {
+    week: string
+    men_unisex_sales: number
+    women_sales: number
+    total_sales: number
+  } | null
+}
+
+export interface GenderSalesResponse {
+  gender_sales: GenderSalesData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export interface GeneratePDFResponse {
   success: boolean
   file_path: string
@@ -133,6 +154,14 @@ export async function getContribution(baseWeek: string, numWeeks: number = 8): P
   const response = await fetch(`${API_BASE_URL}/api/contribution?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Contribution data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getGenderSales(baseWeek: string, numWeeks: number = 8): Promise<GenderSalesResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/gender-sales?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Gender Sales data: ${response.statusText}`)
   }
   return response.json()
 }

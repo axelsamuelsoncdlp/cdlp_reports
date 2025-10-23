@@ -17,6 +17,7 @@ from weekly_report.src.metrics.table1 import calculate_table1_for_periods, calcu
 from weekly_report.src.metrics.markets import calculate_top_markets_for_weeks
 from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_weeks
 from weekly_report.src.metrics.contribution import calculate_contribution_for_weeks
+from weekly_report.src.metrics.gender_sales import calculate_gender_sales_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -93,6 +94,19 @@ class ContributionData(BaseModel):
 
 class ContributionResponse(BaseModel):
     contributions: List[ContributionData]
+    period_info: Dict[str, Any]
+
+
+class GenderSalesData(BaseModel):
+    week: str
+    men_unisex_sales: float
+    women_sales: float
+    total_sales: float
+    last_year: Optional[Dict[str, Any]] = None
+
+
+class GenderSalesResponse(BaseModel):
+    gender_sales: List[GenderSalesData]
     period_info: Dict[str, Any]
 
 
@@ -435,6 +449,42 @@ async def get_contribution(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Contribution metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/gender-sales", response_model=GenderSalesResponse)
+async def get_gender_sales(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Gender Sales metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        gender_sales_data = calculate_gender_sales_for_weeks(base_week, num_weeks)
+        
+        # Format response
+        response = GenderSalesResponse(
+            gender_sales=gender_sales_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"  # Could add date range if needed
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Gender Sales metrics for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
