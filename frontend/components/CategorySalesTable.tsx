@@ -128,6 +128,22 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
   const womenAvg = calculateAverage(womenTotals)
   const grandAvg = calculateAverage(grandTotals)
 
+  // Sort categories by average (highest to lowest)
+  const sortCategoriesByAverage = (categories: string[], gender: 'MEN' | 'WOMEN') => {
+    return categories.map(category => {
+      const weekValues: Record<string, number> = {}
+      weekKeys.forEach((week) => {
+        const weekData = category_sales.find((w: any) => w.week === week)
+        weekValues[week] = weekData?.categories[`${gender}_${category}`] || 0
+      })
+      const avg = Object.values(weekValues).reduce((a, b) => a + b, 0) / Object.keys(weekValues).length
+      return { category, avg }
+    }).sort((a, b) => b.avg - a.avg).map(item => item.category)
+  }
+
+  const sortedMenCategories = sortCategoriesByAverage(menCategories, 'MEN')
+  const sortedWomenCategories = sortCategoriesByAverage(womenCategories, 'WOMEN')
+
   return (
     <div className="bg-gray-50 rounded-lg overflow-hidden overflow-x-auto">
       <table className="w-full text-xs">
@@ -158,7 +174,7 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
         </thead>
         <tbody>
           {/* Men Categories */}
-          {menCategories.map((category) => {
+          {sortedMenCategories.map((category) => {
             const weekValues: Record<string, number> = {}
             const lastYearValues: Record<string, number> = {}
             
@@ -262,7 +278,7 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
           </tr>
 
           {/* Women Categories */}
-          {womenCategories.map((category) => {
+          {sortedWomenCategories.map((category) => {
             const weekValues: Record<string, number> = {}
             const lastYearValues: Record<string, number> = {}
             
