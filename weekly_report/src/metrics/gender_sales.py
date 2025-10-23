@@ -25,9 +25,10 @@ def calculate_gender_sales_for_week(qlik_df: pd.DataFrame, week_str: str) -> Dic
     men_sales = gender_sales[gender_sales['Gender'].str.upper() == 'MEN']['Gross Revenue'].sum() if 'MEN' in gender_sales['Gender'].str.upper().values else 0
     women_sales = gender_sales[gender_sales['Gender'].str.upper() == 'WOMEN']['Gross Revenue'].sum() if 'WOMEN' in gender_sales['Gender'].str.upper().values else 0
     unisex_sales = gender_sales[gender_sales['Gender'].str.upper() == 'UNISEX']['Gross Revenue'].sum() if 'UNISEX' in gender_sales['Gender'].str.upper().values else 0
+    kids_sales = gender_sales[gender_sales['Gender'].str.upper() == 'KIDS']['Gross Revenue'].sum() if 'KIDS' in gender_sales['Gender'].str.upper().values else 0
     
-    # Calculate Men + Unisex combined
-    men_unisex_sales = men_sales + unisex_sales
+    # Calculate Men + Unisex + Kids combined
+    men_unisex_sales = men_sales + unisex_sales + kids_sales
     
     return {
         'week': week_str,
