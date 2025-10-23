@@ -19,6 +19,7 @@ from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_week
 from weekly_report.src.metrics.contribution import calculate_contribution_for_weeks
 from weekly_report.src.metrics.gender_sales import calculate_gender_sales_for_weeks
 from weekly_report.src.metrics.men_category_sales import calculate_men_category_sales_for_weeks
+from weekly_report.src.metrics.women_category_sales import calculate_women_category_sales_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -119,6 +120,17 @@ class MenCategorySalesData(BaseModel):
 
 class MenCategorySalesResponse(BaseModel):
     men_category_sales: List[MenCategorySalesData]
+    period_info: Dict[str, Any]
+
+
+class WomenCategorySalesData(BaseModel):
+    week: str
+    categories: Dict[str, float]
+    last_year: Optional[Dict[str, Any]] = None
+
+
+class WomenCategorySalesResponse(BaseModel):
+    women_category_sales: List[WomenCategorySalesData]
     period_info: Dict[str, Any]
 
 
@@ -535,6 +547,43 @@ async def get_men_category_sales(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Men Category Sales metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/women-category-sales", response_model=WomenCategorySalesResponse)
+async def get_women_category_sales(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Women Category Sales metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        women_category_sales_data = calculate_women_category_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
+        
+        # Format response
+        response = WomenCategorySalesResponse(
+            women_category_sales=women_category_sales_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"  # Could add date range if needed
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Women Category Sales metrics for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

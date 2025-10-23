@@ -9,17 +9,19 @@ import {
   getContribution,
   getGenderSales,
   getMenCategorySales,
+  getWomenCategorySales,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
   type OnlineKPIsResponse,
   type ContributionResponse,
   type GenderSalesResponse,
-  type MenCategorySalesResponse
+  type MenCategorySalesResponse,
+  type WomenCategorySalesResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -34,6 +36,7 @@ interface CacheData {
   contribution: ContributionResponse | null
   gender_sales: GenderSalesResponse | null
   men_category_sales: MenCategorySalesResponse | null
+  women_category_sales: WomenCategorySalesResponse | null
   timestamp: number
 }
 
@@ -45,6 +48,7 @@ interface DataCacheContextType {
   contribution: ContributionResponse | null
   gender_sales: GenderSalesResponse | null
   men_category_sales: MenCategorySalesResponse | null
+  women_category_sales: WomenCategorySalesResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -68,6 +72,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [contribution, setContribution] = useState<ContributionResponse | null>(null)
   const [gender_sales, setGender_sales] = useState<GenderSalesResponse | null>(null)
   const [men_category_sales, setMen_category_sales] = useState<MenCategorySalesResponse | null>(null)
+  const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -117,6 +122,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setContribution(cached.contribution)
         setGender_sales(cached.gender_sales)
         setMen_category_sales(cached.men_category_sales)
+        setWomen_category_sales(cached.women_category_sales)
         return
       }
     }
@@ -128,7 +134,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'periods', 
         stepNumber: 1, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading periods...', 
         percentage: 0 
       })
@@ -139,9 +145,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'metrics', 
         stepNumber: 2, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading summary metrics...', 
-        percentage: 14 
+        percentage: 12 
       })
       const metricsData = await getTable1Metrics(week, ['actual', 'last_week', 'last_year', 'year_2023'], true)
       setMetrics(metricsData)
@@ -150,9 +156,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'markets', 
         stepNumber: 3, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading top markets data...', 
-        percentage: 28 
+        percentage: 25 
       })
       const marketsData = await getTopMarkets(week, 8)
       setMarkets(marketsData)
@@ -161,9 +167,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'kpis', 
         stepNumber: 4, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading online KPIs...', 
-        percentage: 42 
+        percentage: 37 
       })
       const kpisData = await getOnlineKPIs(week, 8)
       setKpis(kpisData)
@@ -172,9 +178,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution', 
         stepNumber: 5, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading contribution metrics...', 
-        percentage: 57 
+        percentage: 50 
       })
       const contributionData = await getContribution(week, 8)
       setContribution(contributionData)
@@ -183,9 +189,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'gender_sales', 
         stepNumber: 6, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading gender sales data...', 
-        percentage: 71 
+        percentage: 62 
       })
       const genderSalesData = await getGenderSales(week, 8)
       setGender_sales(genderSalesData)
@@ -194,17 +200,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'men_category_sales', 
         stepNumber: 7, 
-        totalSteps: 7, 
+        totalSteps: 8, 
         message: 'Loading men category sales...', 
-        percentage: 85 
+        percentage: 75 
       })
       const menCategorySalesData = await getMenCategorySales(week, 8)
       setMen_category_sales(menCategorySalesData)
 
+      // Step 8: Load Women Category Sales
+      setLoadingProgress({ 
+        step: 'women_category_sales', 
+        stepNumber: 8, 
+        totalSteps: 8, 
+        message: 'Loading women category sales...', 
+        percentage: 87 
+      })
+      const womenCategorySalesData = await getWomenCategorySales(week, 8)
+      setWomen_category_sales(womenCategorySalesData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 7, 
-        totalSteps: 7, 
+        stepNumber: 8, 
+        totalSteps: 8, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -218,6 +235,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         contribution: contributionData,
         gender_sales: genderSalesData,
         men_category_sales: menCategorySalesData,
+        women_category_sales: womenCategorySalesData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -244,6 +262,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setContribution(null)
       setGender_sales(null)
       setMen_category_sales(null)
+      setWomen_category_sales(null)
     } catch (err) {
       console.warn('Failed to clear cache:', err)
     }
@@ -262,6 +281,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     contribution,
     gender_sales,
     men_category_sales,
+    women_category_sales,
     loading,
     error,
     loadingProgress,
@@ -316,4 +336,9 @@ export function useGenderSales() {
 export function useMenCategorySales() {
   const { men_category_sales } = useDataCache()
   return { men_category_sales }
+}
+
+export function useWomenCategorySales() {
+  const { women_category_sales } = useDataCache()
+  return { women_category_sales }
 }
