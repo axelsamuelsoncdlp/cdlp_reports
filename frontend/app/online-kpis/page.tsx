@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { getPeriods, getOnlineKPIs, type OnlineKPIsResponse } from '@/lib/api'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
+import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
 
 export default function OnlineKPIs() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
@@ -44,15 +46,6 @@ export default function OnlineKPIs() {
 
     loadKPIs()
   }, [periods, selectedWeek])
-
-  const chartData = kpisData?.kpis.map(kpi => {
-    const weekNum = kpi.week.split('-')[1]
-    return {
-      week: `W${weekNum}`,
-      current: kpi.aov_new_customer,
-      lastYear: kpi.last_year?.aov_new_customer || 0
-    }
-  }) || []
 
   const kpiLabels = [
     { key: 'aov_new_customer', label: 'AOV New Customer', format: (val: number) => `SEK ${val.toFixed(0)}` },
@@ -97,43 +90,104 @@ export default function OnlineKPIs() {
 
   return (
     <div className="space-y-8">
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Online KPIs</h2>
-        
-        <div className="grid grid-cols-3 gap-6">
-          {kpiLabels.map((kpi, index) => {
-            const chartData = kpisData.kpis.map(k => {
-              const weekNum = k.week.split('-')[1]
-              const currentValue = k[kpi.key as keyof typeof k] as number
-              const lastYearValue = k.last_year?.[kpi.key as keyof typeof k.last_year] as number || 0
-              
-              return {
-                week: `W${weekNum}`,
-                current: currentValue,
-                lastYear: lastYearValue
-              }
-            })
+      <div className="grid grid-cols-3 gap-6">
+        {kpiLabels.map((kpi, index) => {
+          const chartData = kpisData.kpis.map(k => {
+            const weekNum = k.week.split('-')[1]
+            const currentValue = k[kpi.key as keyof typeof k] as number
+            const lastYearValue = k.last_year?.[kpi.key as keyof typeof k.last_year] as number || 0
+            
+            return {
+              week: `W${weekNum}`,
+              current: currentValue,
+              lastYear: lastYearValue
+            }
+          })
 
-            return (
-              <div key={index} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-4">{kpi.label}</h3>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Line type="monotone" dataKey="current" stroke="#8884d8" name="Current Year" />
-                    <Line type="monotone" dataKey="lastYear" stroke="#82ca9d" name="Last Year" />
+          const chartConfig = {
+            current: {
+              label: "Current Year",
+              color: "var(--chart-1)",
+            },
+            lastYear: {
+              label: "Last Year",
+              color: "var(--chart-2)",
+            },
+          } satisfies ChartConfig
+
+          return (
+            <Card key={index}>
+              <CardHeader>
+                <CardTitle>{kpi.label}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig}>
+                  <LineChart
+                    accessibilityLayer
+                    data={chartData}
+                    margin={{
+                      top: 20,
+                      left: 12,
+                      right: 12,
+                    }}
+                  >
+                    <CartesianGrid vertical={false} />
+                    <XAxis
+                      dataKey="week"
+                      tickLine={false}
+                      axisLine={false}
+                      tickMargin={8}
+                      tickFormatter={(value) => value.slice(0, 3)}
+                    />
+                    <ChartTooltip
+                      cursor={false}
+                      content={<ChartTooltipContent indicator="line" />}
+                    />
+                    <Line
+                      dataKey="current"
+                      type="natural"
+                      stroke="var(--color-current)"
+                      strokeWidth={2}
+                      dot={{
+                        fill: "var(--color-current)",
+                      }}
+                      activeDot={{
+                        r: 6,
+                      }}
+                    >
+                      <LabelList
+                        position="top"
+                        offset={12}
+                        className="fill-foreground"
+                        fontSize={12}
+                      />
+                    </Line>
+                    <Line
+                      dataKey="lastYear"
+                      type="natural"
+                      stroke="var(--color-lastYear)"
+                      strokeWidth={2}
+                      dot={{
+                        fill: "var(--color-lastYear)",
+                      }}
+                      activeDot={{
+                        r: 6,
+                      }}
+                    >
+                      <LabelList
+                        position="top"
+                        offset={12}
+                        className="fill-foreground"
+                        fontSize={12}
+                      />
+                    </Line>
                   </LineChart>
-                </ResponsiveContainer>
-              </div>
-            )
-          })}
-        </div>
+                </ChartContainer>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
     </div>
   )
 }
-
