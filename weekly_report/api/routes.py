@@ -467,7 +467,8 @@ async def get_gender_sales(
         if num_weeks < 1 or num_weeks > 52:
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
-        gender_sales_data = calculate_gender_sales_for_weeks(base_week, num_weeks)
+        config = load_config(week=base_week)
+        gender_sales_data = calculate_gender_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
         
         # Format response
         response = GenderSalesResponse(

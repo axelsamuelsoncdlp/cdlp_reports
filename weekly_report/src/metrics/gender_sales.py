@@ -2,9 +2,9 @@
 from typing import Dict, Any, List
 import pandas as pd
 from loguru import logger
+from pathlib import Path
 
-from weekly_report.src.adapters.qlik import load_data
-from weekly_report.src.config import load_config
+from weekly_report.src.metrics.table1 import load_all_raw_data
 
 
 def calculate_gender_sales_for_week(qlik_df: pd.DataFrame, week_str: str) -> Dict[str, Any]:
@@ -37,10 +37,23 @@ def calculate_gender_sales_for_week(qlik_df: pd.DataFrame, week_str: str) -> Dic
     }
 
 
-def calculate_gender_sales_for_weeks(base_week: str, num_weeks: int = 8) -> List[Dict[str, Any]]:
+def calculate_gender_sales_for_weeks(base_week: str, num_weeks: int, data_root: Path) -> List[Dict[str, Any]]:
     """Calculate gender sales for multiple weeks."""
     
     results = []
+    
+    # Load all raw data once from base week directory
+    logger.info(f"Loading raw data from {data_root}")
+    raw_data = load_all_raw_data(data_root)
+    qlik_df = raw_data.get('qlik', pd.DataFrame())
+    
+    if qlik_df.empty:
+        logger.warning(f"No Qlik data found in {data_root}")
+        return []
+    
+    # Add iso_week column if not present
+    if 'iso_week' not in qlik_df.columns and 'Date' in qlik_df.columns:
+        qlik_df['iso_week'] = qlik_df['Date'].apply(lambda x: pd.to_datetime(x).strftime('%Y-%W') if pd.notna(x) else None)
     
     # Parse base week
     year, week_num = base_week.split('-')
@@ -49,7 +62,7 @@ def calculate_gender_sales_for_weeks(base_week: str, num_weeks: int = 8) -> List
     
     for i in range(num_weeks):
         # Calculate target week
-        target_week_num = week_num - i
+        target_week_num = week_num - num_weeks + 1 + i
         target_year = year
         
         # Handle year rollover
@@ -60,24 +73,22 @@ def calculate_gender_sales_for_weeks(base_week: str, num_weeks: int = 8) -> List
         week_str = f"{target_year}-{target_week_num:02d}"
         
         try:
-            # Load Qlik data for this week
-            config = load_config(week=week_str)
-            qlik_df = load_data(config.raw_data_path)
+            # Filter data for this week
+            week_df = qlik_df[qlik_df['iso_week'] == week_str].copy()
             
-            if qlik_df.empty:
-                logger.warning(f"No Qlik data for week {week_str}")
+            if week_df.empty:
+                logger.warning(f"No data for week {week_str}")
                 continue
             
             # Calculate gender sales
-            week_data = calculate_gender_sales_for_week(qlik_df, week_str)
+            week_data = calculate_gender_sales_for_week(week_df, week_str)
             
             # Get last year data
             last_year = target_year - 1
             last_year_week_str = f"{last_year}-{target_week_num:02d}"
             
             try:
-                last_year_config = load_config(week=last_year_week_str)
-                last_year_df = load_data(last_year_config.raw_data_path)
+                last_year_df = qlik_df[qlik_df['iso_week'] == last_year_week_str].copy()
                 
                 if not last_year_df.empty:
                     last_year_data = calculate_gender_sales_for_week(last_year_df, last_year_week_str)
@@ -93,9 +104,6 @@ def calculate_gender_sales_for_weeks(base_week: str, num_weeks: int = 8) -> List
         except Exception as e:
             logger.error(f"Error processing week {week_str}: {e}")
             continue
-    
-    # Reverse to get chronological order (oldest to newest)
-    results.reverse()
     
     return results
 
