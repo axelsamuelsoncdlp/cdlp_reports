@@ -6,9 +6,7 @@ from typing import Dict, List, Any
 import pandas as pd
 from loguru import logger
 
-from weekly_report.src.adapters.qlik import load_data as load_qlik_data
-from weekly_report.src.adapters.shopify import load_data as load_shopify_data
-from weekly_report.src.adapters.dema import load_data as load_dema_spend_data
+from weekly_report.src.metrics.table1 import load_all_raw_data
 from weekly_report.src.periods.calculator import get_week_date_range
 
 
@@ -24,13 +22,11 @@ def get_iso_week_from_date(date_str: str) -> str:
 
 
 def filter_data_by_iso_week(df: pd.DataFrame, iso_week: str, date_column: str = 'Date') -> pd.DataFrame:
-    """Filter dataframe by ISO week."""
-    if df.empty:
+    """Filter dataframe by ISO week (iso_week column must already exist)."""
+    if df.empty or 'iso_week' not in df.columns:
         return df
     
-    df['iso_week'] = df[date_column].apply(get_iso_week_from_date)
     filtered = df[df['iso_week'] == iso_week].copy()
-    filtered = filtered.drop(columns=['iso_week'])
     return filtered
 
 
@@ -86,7 +82,7 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     # Collect all weeks
     all_weeks = list(set(weeks_to_analyze + last_year_weeks))
     
-    # Load data once from the base week directory
+    # Load data once from the base week directory using cached loader
     latest_data_path = data_root / "raw" / base_week
     qlik_df = pd.DataFrame()
     shopify_df = pd.DataFrame()
@@ -94,14 +90,36 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     
     if latest_data_path.exists():
         try:
-            # Load Qlik data
-            qlik_df = load_qlik_data(latest_data_path)
+            # Load all raw data using cached loader (loads once, caches in memory)
+            logger.info(f"Loading raw data from {latest_data_path}")
+            all_raw_data = load_all_raw_data(latest_data_path)
             
-            # Load Shopify data
+            qlik_df = all_raw_data.get('qlik', pd.DataFrame())
+            dema_df = all_raw_data.get('dema_spend', pd.DataFrame())
+            
+            # Shopify data is loaded separately as it's not in load_all_raw_data
+            from weekly_report.src.adapters.shopify import load_data as load_shopify_data
             shopify_df = load_shopify_data(latest_data_path)
             
-            # Load DEMA spend data
-            dema_df = load_dema_spend_data(latest_data_path)
+            # Pre-compute ISO week column for all dataframes to avoid repeated computation
+            if not qlik_df.empty and 'Date' in qlik_df.columns:
+                qlik_df['Date'] = pd.to_datetime(qlik_df['Date'], errors='coerce')
+                iso_cal = qlik_df['Date'].dt.isocalendar()
+                qlik_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+                logger.info(f"Pre-computed ISO weeks for Qlik data: {qlik_df.shape}")
+            
+            if not dema_df.empty and 'Days' in dema_df.columns:
+                dema_df['Days'] = pd.to_datetime(dema_df['Days'], errors='coerce')
+                iso_cal = dema_df['Days'].dt.isocalendar()
+                dema_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+                logger.info(f"Pre-computed ISO weeks for DEMA data: {dema_df.shape}")
+            
+            if not shopify_df.empty and 'Date' in shopify_df.columns:
+                shopify_df['Date'] = pd.to_datetime(shopify_df['Date'], errors='coerce')
+                iso_cal = shopify_df['Date'].dt.isocalendar()
+                shopify_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+                logger.info(f"Pre-computed ISO weeks for Shopify data: {shopify_df.shape}")
+                
         except Exception as e:
             logger.warning(f"Failed to load data for week {base_week}: {e}")
     
@@ -109,22 +127,18 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     kpis_list = []
     
     for week_idx, week_str in enumerate(weeks_to_analyze):
-        # Filter data for this week
+        # Filter data for this week (iso_week column already computed)
         week_qlik_df = filter_data_by_iso_week(qlik_df, week_str, 'Date')
         
-        # Filter Shopify data by week (if it has a date column)
+        # Filter Shopify data by week (iso_week column already computed)
         week_shopify_df = shopify_df.copy()
-        if not shopify_df.empty and 'Date' in shopify_df.columns:
-            week_shopify_df = filter_data_by_iso_week(shopify_df, week_str, 'Date')
-        elif not shopify_df.empty and 'iso_week' in shopify_df.columns:
+        if not shopify_df.empty and 'iso_week' in shopify_df.columns:
             week_shopify_df = shopify_df[shopify_df['iso_week'] == week_str].copy()
         
-        # Filter DEMA data by week (if it has a date column)
+        # Filter DEMA data by week (iso_week column already computed)
         week_dema_df = dema_df.copy()
-        if not dema_df.empty and 'Date' in dema_df.columns:
-            week_dema_df = filter_data_by_iso_week(dema_df, week_str, 'Date')
-        elif not dema_df.empty and 'Days' in dema_df.columns:
-            week_dema_df = filter_data_by_iso_week(dema_df, week_str, 'Days')
+        if not dema_df.empty and 'iso_week' in dema_df.columns:
+            week_dema_df = dema_df[dema_df['iso_week'] == week_str].copy()
         
         if week_qlik_df.empty:
             logger.warning(f"Missing data for week {week_str}")
