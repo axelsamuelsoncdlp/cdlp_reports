@@ -62,6 +62,7 @@ class KPIData(BaseModel):
     aov_new_customer: float
     aov_returning_customer: float
     cos: float
+    marketing_spend: float
     conversion_rate: float
     new_customers: int
     returning_customers: int

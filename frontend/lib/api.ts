@@ -38,6 +38,7 @@ export interface OnlineKPIsResponse {
     aov_new_customer: number
     aov_returning_customer: number
     cos: number
+    marketing_spend: number
     conversion_rate: number
     new_customers: number
     returning_customers: number
@@ -49,6 +50,7 @@ export interface OnlineKPIsResponse {
       aov_new_customer: number
       aov_returning_customer: number
       cos: number
+      marketing_spend: number
       conversion_rate: number
       new_customers: number
       returning_customers: number
