@@ -155,8 +155,12 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
             new_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
             returning_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'Returning']
             
+            logger.info(f"Week {week_str}: Found {len(new_rows)} New rows and {len(returning_rows)} Returning rows in GM2 data")
+            
             gm2_new = new_rows['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
             gm2_returning = returning_rows['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
+            
+            logger.info(f"Week {week_str}: GM2 New={gm2_new:.2f}, GM2 Returning={gm2_returning:.2f}")
         else:
             # Old format - allocate proportionally based on gross revenue
             gm2_total = dema_gm2_df['Gross margin 2 - Dema MTA'].sum() if 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
