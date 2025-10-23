@@ -1,6 +1,6 @@
 """FastAPI routes for weekly report API."""
 
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import FastAPI, HTTPException, Query, File, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -8,6 +8,8 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 import tempfile
 import os
+import shutil
+from datetime import datetime
 from loguru import logger
 
 from weekly_report.src.periods.calculator import get_periods_for_week, get_week_date_range, get_ytd_periods_for_week, validate_iso_week
@@ -17,6 +19,7 @@ from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_week
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
+from weekly_report.src.utils.file_metadata import extract_file_metadata
 
 
 # Pydantic models
@@ -388,6 +391,93 @@ async def get_online_kpis(
         logger.error(f"Error getting Online KPIs for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.post("/api/upload-file")
+async def upload_file(
+    file: UploadFile = File(...),
+    week: str = Form(...),
+    file_type: str = Form(..., description="qlik, dema_spend, dema_gm2, or shopify")
+):
+    """
+    Upload data file for specific week and type.
+    Validates file type, extracts date range, saves to correct location.
+    """
+    try:
+        # Validate week format
+        if not validate_iso_week(week):
+            raise HTTPException(status_code=400, detail="Invalid ISO week format")
+        
+        # Validate file_type
+        allowed_types = ["qlik", "dema_spend", "dema_gm2", "shopify"]
+        if file_type not in allowed_types:
+            raise HTTPException(status_code=400, detail=f"Invalid file type. Must be one of {allowed_types}")
+        
+        # Validate file extension
+        file_extension = Path(file.filename).suffix.lower()
+        if file_type == "qlik" and file_extension not in ['.xlsx', '.csv']:
+            raise HTTPException(status_code=400, detail="Qlik file must be .xlsx or .csv")
+        if file_type in ["dema_spend", "dema_gm2", "shopify"] and file_extension != '.csv':
+            raise HTTPException(status_code=400, detail=f"{file_type} file must be .csv")
+        
+        # Create target directory
+        config = load_config(week=week)
+        target_dir = config.raw_data_path / file_type
+        target_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Save file
+        target_path = target_dir / file.filename
+        with target_path.open("wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        logger.info(f"File uploaded: {target_path}")
+        
+        # Extract metadata (date range)
+        metadata = extract_file_metadata(target_path, file_type)
+        
+        return {
+            "success": True,
+            "file_path": str(target_path),
+            "metadata": metadata
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading file: {e}")
+        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+
+
+@app.get("/api/file-metadata")
+async def get_file_metadata(week: str = Query(...)):
+    """Get metadata for all data files in a specific week."""
+    try:
+        if not validate_iso_week(week):
+            raise HTTPException(status_code=400, detail="Invalid ISO week format")
+        
+        config = load_config(week=week)
+        raw_path = config.raw_data_path
+        
+        metadata = {}
+        for file_type in ["qlik", "dema_spend", "dema_gm2", "shopify"]:
+            type_path = raw_path / file_type
+            if type_path.exists():
+                files = list(type_path.glob("*.*"))
+                if files:
+                    file_info = extract_file_metadata(files[0], file_type)
+                    metadata[file_type] = {
+                        "filename": files[0].name,
+                        "uploaded_at": datetime.fromtimestamp(files[0].stat().st_mtime).isoformat(),
+                        **file_info
+                    }
+        
+        return metadata
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting file metadata: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get file metadata")
 
 
 if __name__ == "__main__":
