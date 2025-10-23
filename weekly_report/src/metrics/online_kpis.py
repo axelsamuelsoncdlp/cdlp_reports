@@ -12,6 +12,28 @@ from weekly_report.src.adapters.dema import load_data as load_dema_spend_data
 from weekly_report.src.periods.calculator import get_week_date_range
 
 
+def get_iso_week_from_date(date_str: str) -> str:
+    """Convert date string to ISO week format."""
+    try:
+        date = pd.to_datetime(date_str)
+        year, week, _ = date.isocalendar()
+        return f"{year}-{week:02d}"
+    except Exception as e:
+        logger.warning(f"Could not parse date {date_str}: {e}")
+        return None
+
+
+def filter_data_by_iso_week(df: pd.DataFrame, iso_week: str, date_column: str = 'Date') -> pd.DataFrame:
+    """Filter dataframe by ISO week."""
+    if df.empty:
+        return df
+    
+    df['iso_week'] = df[date_column].apply(get_iso_week_from_date)
+    filtered = df[df['iso_week'] == iso_week].copy()
+    filtered = filtered.drop(columns=['iso_week'])
+    return filtered
+
+
 def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: Path) -> Dict[str, Any]:
     """
     Calculate Online KPIs for the last N weeks.
@@ -64,51 +86,62 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     # Collect all weeks
     all_weeks = list(set(weeks_to_analyze + last_year_weeks))
     
-    # Load data for all weeks
-    qlik_data = {}
-    shopify_data = {}
-    dema_spend_data = {}
+    # Load data once from the base week directory
+    latest_data_path = data_root / "raw" / base_week
+    qlik_df = pd.DataFrame()
+    shopify_df = pd.DataFrame()
+    dema_df = pd.DataFrame()
     
-    for week_str in all_weeks:
-        week_path = data_root / "raw" / week_str
-        if week_path.exists():
-            try:
-                # Load Qlik data
-                qlik_df = load_qlik_data(week_path)
-                qlik_data[week_str] = qlik_df
-                
-                # Load Shopify data
-                shopify_df = load_shopify_data(week_path)
-                shopify_data[week_str] = shopify_df
-                
-                # Load DEMA spend data
-                dema_df = load_dema_spend_data(week_path)
-                dema_spend_data[week_str] = dema_df
-            except Exception as e:
-                logger.warning(f"Failed to load data for week {week_str}: {e}")
+    if latest_data_path.exists():
+        try:
+            # Load Qlik data
+            qlik_df = load_qlik_data(latest_data_path)
+            
+            # Load Shopify data
+            shopify_df = load_shopify_data(latest_data_path)
+            
+            # Load DEMA spend data
+            dema_df = load_dema_spend_data(latest_data_path)
+        except Exception as e:
+            logger.warning(f"Failed to load data for week {base_week}: {e}")
     
     # Calculate KPIs for each week
     kpis_list = []
     
     for week_idx, week_str in enumerate(weeks_to_analyze):
-        if week_str not in qlik_data or week_str not in shopify_data:
+        # Filter data for this week
+        week_qlik_df = filter_data_by_iso_week(qlik_df, week_str, 'Date')
+        
+        # Filter Shopify data by week (if it has a date column)
+        week_shopify_df = shopify_df.copy()
+        if not shopify_df.empty and 'Date' in shopify_df.columns:
+            week_shopify_df = filter_data_by_iso_week(shopify_df, week_str, 'Date')
+        elif not shopify_df.empty and 'iso_week' in shopify_df.columns:
+            week_shopify_df = shopify_df[shopify_df['iso_week'] == week_str].copy()
+        
+        # Filter DEMA data by week (if it has a date column)
+        week_dema_df = dema_df.copy()
+        if not dema_df.empty and 'Date' in dema_df.columns:
+            week_dema_df = filter_data_by_iso_week(dema_df, week_str, 'Date')
+        elif not dema_df.empty and 'Days' in dema_df.columns:
+            week_dema_df = filter_data_by_iso_week(dema_df, week_str, 'Days')
+        
+        if week_qlik_df.empty:
             logger.warning(f"Missing data for week {week_str}")
             continue
         
-        qlik_df = qlik_data[week_str]
-        shopify_df = shopify_data[week_str]
-        dema_df = dema_spend_data.get(week_str, pd.DataFrame())
-        
         # Calculate KPIs
-        week_kpis = calculate_week_kpis(qlik_df, shopify_df, dema_df, week_str)
+        week_kpis = calculate_week_kpis(week_qlik_df, week_shopify_df, week_dema_df, week_str)
         
         # Add last year comparison
         last_year_week = last_year_weeks[week_idx]
-        if last_year_week in qlik_data:
+        last_year_qlik_df = filter_data_by_iso_week(qlik_df, last_year_week, 'Date')
+        
+        if not last_year_qlik_df.empty:
             last_year_kpis = calculate_week_kpis(
-                qlik_data[last_year_week],
-                shopify_data.get(last_year_week, pd.DataFrame()),
-                dema_spend_data.get(last_year_week, pd.DataFrame()),
+                last_year_qlik_df,
+                week_shopify_df,  # Use same shopify data
+                week_dema_df,  # Use same dema data
                 last_year_week
             )
             week_kpis['last_year'] = last_year_kpis
@@ -139,15 +172,15 @@ def calculate_week_kpis(qlik_df: pd.DataFrame, shopify_df: pd.DataFrame, dema_df
     net_revenue = online_df['Net Revenue'].sum()
     
     # New/Returning customers
-    new_customers = online_df[online_df['New/Returning Customer'] == 'New Customer']['Customer E-mail'].nunique()
-    returning_customers = online_df[online_df['New/Returning Customer'] == 'Returning Customer']['Customer E-mail'].nunique()
+    new_customers = online_df[online_df['New/Returning Customer'] == 'New']['Customer E-mail'].nunique()
+    returning_customers = online_df[online_df['New/Returning Customer'] == 'Returning']['Customer E-mail'].nunique()
     
     # New customer revenue
-    new_customer_df = online_df[online_df['New/Returning Customer'] == 'New Customer']
+    new_customer_df = online_df[online_df['New/Returning Customer'] == 'New']
     new_customer_revenue = new_customer_df['Net Revenue'].sum()
     
     # Returning customer revenue
-    returning_customer_df = online_df[online_df['New/Returning Customer'] == 'Returning Customer']
+    returning_customer_df = online_df[online_df['New/Returning Customer'] == 'Returning']
     returning_customer_revenue = returning_customer_df['Net Revenue'].sum()
     
     # Calculate AOVs
@@ -180,14 +213,14 @@ def calculate_week_kpis(qlik_df: pd.DataFrame, shopify_df: pd.DataFrame, dema_df
     
     return {
         'week': week_str,
-        'aov_new_customer': aov_new_customer,
-        'aov_returning_customer': aov_returning_customer,
-        'cos': cos,
-        'conversion_rate': conversion_rate,
-        'new_customers': new_customers,
-        'returning_customers': returning_customers,
-        'sessions': sessions,
-        'new_customer_cac': new_customer_cac,
-        'total_orders': total_orders
+        'aov_new_customer': float(aov_new_customer),
+        'aov_returning_customer': float(aov_returning_customer),
+        'cos': float(cos),
+        'conversion_rate': float(conversion_rate),
+        'new_customers': int(new_customers),
+        'returning_customers': int(returning_customers),
+        'sessions': int(sessions),
+        'new_customer_cac': float(new_customer_cac),
+        'total_orders': int(total_orders)
     }
 
