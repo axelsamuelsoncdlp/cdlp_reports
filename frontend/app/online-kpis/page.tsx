@@ -138,7 +138,7 @@ export default function OnlineKPIs() {
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
         {kpiLabels.map((kpi, index) => {
-          // Data comes in correct order W35->W42 from backend
+          // Reverse data to show W35 on left, W42 on right
           const chartData = kpisData.kpis.map(k => {
             const weekNum = k.week.split('-')[1]
             const currentValue = k[kpi.key as keyof typeof k] as number
@@ -149,7 +149,7 @@ export default function OnlineKPIs() {
               current: currentValue,
               lastYear: lastYearValue
             }
-          })
+          }).reverse()
 
           const chartConfig = {
             current: {
