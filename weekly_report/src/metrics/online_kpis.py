@@ -70,7 +70,7 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     dema_spend_data = {}
     
     for week_str in all_weeks:
-        week_path = data_root / week_str
+        week_path = data_root / "raw" / week_str
         if week_path.exists():
             try:
                 # Load Qlik data

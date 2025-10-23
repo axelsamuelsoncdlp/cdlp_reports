@@ -59,8 +59,8 @@ def calculate_top_markets_for_weeks(base_week: str, num_weeks: int, data_root: P
     logger.info(f"Analyzing weeks: {weeks_to_analyze}")
     logger.info(f"Last year weeks: {last_year_weeks}")
     
-    # Load all raw data once
-    latest_data_path = data_root
+    # Load all raw data once - use raw subdirectory
+    latest_data_path = data_root / "raw" / base_week
     try:
         all_raw_data = load_all_raw_data(latest_data_path)
     except Exception as e:

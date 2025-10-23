@@ -306,10 +306,9 @@ async def debug_markets(
     num_weeks: int = Query(8, description="Number of weeks to analyze")
 ):
     """Debug endpoint to see raw markets data."""
-    from pathlib import Path
     
     config = load_config(week=base_week)
-    markets_data = calculate_top_markets_for_weeks(base_week, num_weeks, Path(config.data_root))
+    markets_data = calculate_top_markets_for_weeks(base_week, num_weeks, config.data_root)
     
     # Return raw data without Pydantic
     return markets_data
@@ -333,8 +332,8 @@ async def get_top_markets(
         # Load config to get data root
         config = load_config(week=base_week)
         
-        # Calculate top markets
-        markets_data = calculate_top_markets_for_weeks(base_week, num_weeks, config.raw_data_path)
+        # Calculate top markets - use data_root not raw_data_path
+        markets_data = calculate_top_markets_for_weeks(base_week, num_weeks, config.data_root)
         
         # Debug: Log raw data
         logger.info(f"Raw data - First market weeks count: {len(markets_data['markets'][0]['weeks'])}")
@@ -374,8 +373,8 @@ async def get_online_kpis(
         # Load config to get data root
         config = load_config(week=base_week)
         
-        # Calculate Online KPIs
-        kpis_data = calculate_online_kpis_for_weeks(base_week, num_weeks, config.raw_data_path)
+        # Calculate Online KPIs - use data_root not raw_data_path
+        kpis_data = calculate_online_kpis_for_weeks(base_week, num_weeks, config.data_root)
         
         response = OnlineKPIsResponse(**kpis_data)
         
