@@ -184,6 +184,7 @@ export default function OnlineKPIs() {
                       tickLine={false}
                       axisLine={false}
                       tickMargin={8}
+                      tickFormatter={(value) => value.replace('W', '')}
                     />
                     <ChartTooltip
                       cursor={false}
