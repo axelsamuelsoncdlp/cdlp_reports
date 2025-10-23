@@ -11,8 +11,8 @@ export default function GenderSales() {
   const { gender_sales } = useGenderSales()
 
   const genderLabels = [
-    { key: 'men_unisex_sales', label: 'Gross Sales Men + Unisex', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'women_sales', label: 'Gross Sales Womens', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
+    { key: 'men_unisex_sales', label: 'Gross Sales Men + Unisex', format: (val: number) => Math.round(val / 1000).toString() },
+    { key: 'women_sales', label: 'Gross Sales Womens', format: (val: number) => Math.round(val / 1000).toString() },
   ]
 
   if (!gender_sales) {
