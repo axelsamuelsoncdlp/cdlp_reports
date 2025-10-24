@@ -334,6 +334,28 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
                 return formatYoY(avgYoY)
               })()}
             </td>
+            {weekKeys.map((week) => {
+              const categoryValue = menTotals[week]
+              const sob = calculateSoB(categoryValue, grandTotals[week])
+              
+              return (
+                <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-50">
+                  {formatSoB(sob)}
+                </td>
+              )
+            })}
+            <td className="py-2 px-2 text-right text-gray-700 bg-green-50 font-medium">
+              {(() => {
+                let totalCategoryValue = 0
+                let totalGrandValue = 0
+                weekKeys.forEach(week => {
+                  totalCategoryValue += menTotals[week]
+                  totalGrandValue += grandTotals[week]
+                })
+                const avgSoB = totalGrandValue > 0 ? (totalCategoryValue / totalGrandValue) * 100 : null
+                return formatSoB(avgSoB)
+              })()}
+            </td>
           </tr>
 
           {/* Women Categories */}
@@ -393,6 +415,28 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
                     return formatYoY(avgYoY)
                   })()}
                 </td>
+                {weekKeys.map((week) => {
+                  const categoryValue = weekValues[week]
+                  const sob = calculateSoB(categoryValue, grandTotals[week])
+                  
+                  return (
+                    <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-50">
+                      {formatSoB(sob)}
+                    </td>
+                  )
+                })}
+                <td className="py-2 px-2 text-right text-gray-700 bg-green-50 font-medium">
+                  {(() => {
+                    let totalCategoryValue = 0
+                    let totalGrandValue = 0
+                    weekKeys.forEach(week => {
+                      totalCategoryValue += weekValues[week]
+                      totalGrandValue += grandTotals[week]
+                    })
+                    const avgSoB = totalGrandValue > 0 ? (totalCategoryValue / totalGrandValue) * 100 : null
+                    return formatSoB(avgSoB)
+                  })()}
+                </td>
               </tr>
             )
           })}
@@ -436,6 +480,28 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
                 return formatYoY(avgYoY)
               })()}
             </td>
+            {weekKeys.map((week) => {
+              const categoryValue = womenTotals[week]
+              const sob = calculateSoB(categoryValue, grandTotals[week])
+              
+              return (
+                <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-50">
+                  {formatSoB(sob)}
+                </td>
+              )
+            })}
+            <td className="py-2 px-2 text-right text-gray-700 bg-green-50 font-medium">
+              {(() => {
+                let totalCategoryValue = 0
+                let totalGrandValue = 0
+                weekKeys.forEach(week => {
+                  totalCategoryValue += womenTotals[week]
+                  totalGrandValue += grandTotals[week]
+                })
+                const avgSoB = totalGrandValue > 0 ? (totalCategoryValue / totalGrandValue) * 100 : null
+                return formatSoB(avgSoB)
+              })()}
+            </td>
           </tr>
 
           {/* Grand Total */}
@@ -476,6 +542,17 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
                 const avgYoY = validWeeks > 0 ? totalYoY / validWeeks : null
                 return formatYoY(avgYoY)
               })()}
+            </td>
+            {weekKeys.map((week) => {
+              // Grand Total should show 100%
+              return (
+                <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-100">
+                  {formatSoB(100)}
+                </td>
+              )
+            })}
+            <td className="py-2 px-2 text-right text-gray-700 bg-green-100 font-medium">
+              {formatSoB(100)}
             </td>
           </tr>
         </tbody>
