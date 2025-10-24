@@ -51,6 +51,16 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
     }
   }
 
+  const calculateSoB = (categoryValue: number, totalValue: number): number | null => {
+    if (totalValue === 0) return null
+    return (categoryValue / totalValue) * 100
+  }
+
+  const formatSoB = (value: number | null): string => {
+    if (value === null) return '-'
+    return `${Math.round(value)}%`
+  }
+
   const getWeekNumber = (weekStr: string): string => {
     const parts = weekStr.split('-')
     return `W${parts[1]}`
@@ -176,6 +186,9 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
             <th className="text-center py-2 px-2 font-medium text-gray-900 bg-yellow-100" colSpan={9}>
               Y/Y GROWTH%
             </th>
+            <th className="text-center py-2 px-2 font-medium text-gray-900 bg-green-100" colSpan={9}>
+              SoB
+            </th>
           </tr>
           <tr className="bg-gray-200 border-b">
             {weekKeys.map((week) => (
@@ -190,6 +203,12 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               </th>
             ))}
             <th className="text-right py-1 px-2 font-medium text-gray-900 bg-yellow-50" rowSpan={2}>Avg</th>
+            {weekKeys.map((week) => (
+              <th key={`sob-${week}`} className="text-right py-1 px-2 font-medium text-gray-900 bg-green-50" rowSpan={2}>
+                {getWeekNumber(week)}
+              </th>
+            ))}
+            <th className="text-right py-1 px-2 font-medium text-gray-900 bg-green-50" rowSpan={2}>Avg</th>
           </tr>
         </thead>
         <tbody>
@@ -248,6 +267,28 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
                     })
                     const avgYoY = validWeeks > 0 ? totalYoY / validWeeks : null
                     return formatYoY(avgYoY)
+                  })()}
+                </td>
+                {weekKeys.map((week) => {
+                  const categoryValue = weekValues[week]
+                  const sob = calculateSoB(categoryValue, grandTotals[week])
+                  
+                  return (
+                    <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-50">
+                      {formatSoB(sob)}
+                    </td>
+                  )
+                })}
+                <td className="py-2 px-2 text-right text-gray-700 bg-green-50 font-medium">
+                  {(() => {
+                    let totalCategoryValue = 0
+                    let totalGrandValue = 0
+                    weekKeys.forEach(week => {
+                      totalCategoryValue += weekValues[week]
+                      totalGrandValue += grandTotals[week]
+                    })
+                    const avgSoB = totalGrandValue > 0 ? (totalCategoryValue / totalGrandValue) * 100 : null
+                    return formatSoB(avgSoB)
                   })()}
                 </td>
               </tr>
