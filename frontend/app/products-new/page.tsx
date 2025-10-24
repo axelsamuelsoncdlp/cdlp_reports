@@ -26,7 +26,7 @@ export default function ProductsNew() {
   return (
     <div className="space-y-8">
       {periods ? (
-        <>
+        <div className="grid grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Products New</h2>
             <ProductsNewTable baseWeek={selectedWeek} customerType="new" />
@@ -35,7 +35,7 @@ export default function ProductsNew() {
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Products Returning</h2>
             <ProductsNewTable baseWeek={selectedWeek} customerType="returning" />
           </div>
-        </>
+        </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center gap-3">
