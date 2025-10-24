@@ -13,22 +13,14 @@ def calculate_gender_sales_for_week(qlik_df: pd.DataFrame, week_str: str) -> Dic
     # Filter for online sales only
     online_df = qlik_df[qlik_df['Sales Channel'] == 'Online']
     
-    # Group by Gender
-    gender_sales = online_df.groupby('Gender').agg({
-        'Gross Revenue': 'sum'
-    }).reset_index()
-    
     # Calculate totals
     total_sales = online_df['Gross Revenue'].sum()
     
-    # Get individual category sales (case-insensitive matching)
-    men_sales = gender_sales[gender_sales['Gender'].str.upper() == 'MEN']['Gross Revenue'].sum() if 'MEN' in gender_sales['Gender'].str.upper().values else 0
-    women_sales = gender_sales[gender_sales['Gender'].str.upper() == 'WOMEN']['Gross Revenue'].sum() if 'WOMEN' in gender_sales['Gender'].str.upper().values else 0
-    unisex_sales = gender_sales[gender_sales['Gender'].str.upper() == 'UNISEX']['Gross Revenue'].sum() if 'UNISEX' in gender_sales['Gender'].str.upper().values else 0
-    kids_sales = gender_sales[gender_sales['Gender'].str.upper() == 'KIDS']['Gross Revenue'].sum() if 'KIDS' in gender_sales['Gender'].str.upper().values else 0
+    # Get Women sales
+    women_sales = online_df[online_df['Gender'].str.upper() == 'WOMEN']['Gross Revenue'].sum()
     
-    # Calculate Men + Unisex + Kids combined
-    men_unisex_sales = men_sales + unisex_sales + kids_sales
+    # All other sales (including MEN, UNISEX, KIDS, '-', '3 X', etc.) go to Men
+    men_unisex_sales = total_sales - women_sales
     
     return {
         'week': week_str,

@@ -97,8 +97,8 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                 if category == '-' or pd.isna(category):
                     continue
                 
-                # Include UNISEX and KIDS in MEN category
-                if gender in ['MEN', 'UNISEX', 'KIDS']:
+                # Include ALL genders except WOMEN in MEN category
+                if gender != 'WOMEN':
                     key = f"MEN_{category}"
                     if key not in week_result['categories']:
                         week_result['categories'][key] = 0
@@ -131,8 +131,8 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                         if category == '-' or pd.isna(category):
                             continue
                         
-                        # Include UNISEX and KIDS in MEN category
-                        if gender in ['MEN', 'UNISEX', 'KIDS']:
+                        # Include ALL genders except WOMEN in MEN category
+                        if gender != 'WOMEN':
                             key = f"MEN_{category}"
                             if key not in last_year_result['categories']:
                                 last_year_result['categories'][key] = 0

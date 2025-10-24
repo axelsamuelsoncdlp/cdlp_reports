@@ -8,10 +8,13 @@ from weekly_report.src.metrics.table1 import load_all_raw_data
 
 
 def calculate_men_category_sales_for_week(qlik_df: pd.DataFrame, week_str: str) -> Dict[str, Any]:
-    """Calculate gross sales by product category for Men."""
+    """Calculate gross sales by product category for Men (including all genders except Women)."""
     
-    # Filter for online Men sales only
-    men_df = qlik_df[(qlik_df['Sales Channel'] == 'Online') & (qlik_df['Gender'].str.upper() == 'MEN')]
+    # Filter for online sales, excluding Women
+    men_df = qlik_df[
+        (qlik_df['Sales Channel'] == 'Online') & 
+        (qlik_df['Gender'].str.upper() != 'WOMEN')
+    ]
     
     # Group by Product Category
     category_sales = men_df.groupby('Product Category').agg({
