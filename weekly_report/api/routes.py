@@ -21,6 +21,7 @@ from weekly_report.src.metrics.gender_sales import calculate_gender_sales_for_we
 from weekly_report.src.metrics.men_category_sales import calculate_men_category_sales_for_weeks
 from weekly_report.src.metrics.women_category_sales import calculate_women_category_sales_for_weeks
 from weekly_report.src.metrics.category_sales import calculate_category_sales_for_weeks
+from weekly_report.src.metrics.top_products import calculate_top_products_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -143,6 +144,28 @@ class CategorySalesData(BaseModel):
 
 class CategorySalesResponse(BaseModel):
     category_sales: List[CategorySalesData]
+    period_info: Dict[str, Any]
+
+
+class ProductData(BaseModel):
+    rank: int
+    gender: str
+    category: str
+    product: str
+    color: str
+    gross_revenue: float
+    sales_qty: int
+
+
+class TopProductsData(BaseModel):
+    week: str
+    products: List[ProductData]
+    top_total: Dict[str, Any]
+    grand_total: Dict[str, Any]
+
+
+class TopProductsResponse(BaseModel):
+    top_products: List[TopProductsData]
     period_info: Dict[str, Any]
 
 
@@ -633,6 +656,47 @@ async def get_category_sales(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Category Sales metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/top-products", response_model=TopProductsResponse)
+async def get_top_products(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(1, description="Number of weeks to analyze"),
+    top_n: int = Query(20, description="Number of top products to return")
+):
+    """Get Top Products metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        if top_n < 1 or top_n > 100:
+            raise HTTPException(status_code=400, detail=f"Number of top products must be between 1 and 100")
+        
+        config = load_config(week=base_week)
+        top_products_data = calculate_top_products_for_weeks(base_week, num_weeks, config.raw_data_path, top_n)
+        
+        # Format response
+        response = TopProductsResponse(
+            top_products=top_products_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"  # Could add date range if needed
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Top Products metrics for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

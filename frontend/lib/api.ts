@@ -241,6 +241,47 @@ export async function getCategorySales(baseWeek: string, numWeeks: number = 8): 
   return response.json()
 }
 
+export interface ProductData {
+  rank: number
+  gender: string
+  category: string
+  product: string
+  color: string
+  gross_revenue: number
+  sales_qty: number
+}
+
+export interface TopProductsData {
+  week: string
+  products: ProductData[]
+  top_total: {
+    gross_revenue: number
+    sales_qty: number
+    sob: number
+  }
+  grand_total: {
+    gross_revenue: number
+    sales_qty: number
+    sob: number
+  }
+}
+
+export interface TopProductsResponse {
+  top_products: TopProductsData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
+export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20): Promise<TopProductsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Top Products data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
 export async function generatePDF(baseWeek: string, periods: string[]): Promise<GeneratePDFResponse> {
   const response = await fetch(`${API_BASE_URL}/api/generate/pdf`, {
     method: 'POST',
