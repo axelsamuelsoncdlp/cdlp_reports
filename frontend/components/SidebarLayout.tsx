@@ -125,6 +125,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 Products New
               </Link>
               <Link
+                href="/products-gender"
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  pathname === '/products-gender'
+                    ? 'bg-gray-200 text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <IconChartBar className="h-4 w-4" />
+                Products Gender
+              </Link>
+              <Link
                 href="/settings"
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   pathname === '/settings'

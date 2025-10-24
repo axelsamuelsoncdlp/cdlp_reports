@@ -282,6 +282,14 @@ export async function getTopProducts(baseWeek: string, numWeeks: number = 1, top
   return response.json()
 }
 
+export async function getTopProductsByGender(baseWeek: string, numWeeks: number = 1, topN: number = 20, genderFilter: 'men' | 'women' = 'men'): Promise<TopProductsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/top-products-gender?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}&gender_filter=${genderFilter}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Top Products by Gender data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
 export async function generatePDF(baseWeek: string, periods: string[]): Promise<GeneratePDFResponse> {
   const response = await fetch(`${API_BASE_URL}/api/generate/pdf`, {
     method: 'POST',
