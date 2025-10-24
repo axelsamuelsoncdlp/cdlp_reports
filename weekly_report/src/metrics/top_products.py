@@ -7,13 +7,14 @@ from pathlib import Path
 from weekly_report.src.metrics.table1 import load_all_raw_data
 
 
-def calculate_top_products_for_week(qlik_df: pd.DataFrame, week_str: str, top_n: int = 20) -> Dict[str, Any]:
+def calculate_top_products_for_week(qlik_df: pd.DataFrame, week_str: str, top_n: int = 20, customer_type: str = 'new') -> Dict[str, Any]:
     """Calculate top N products for a single week."""
     
-    # Filter for online sales and new customers only
+    # Filter for online sales and specified customer type
+    customer_filter = 'New' if customer_type == 'new' else 'Returning'
     online_df = qlik_df[
         (qlik_df['Sales Channel'] == 'Online') & 
-        (qlik_df['New/Returning Customer'] == 'New')
+        (qlik_df['New/Returning Customer'] == customer_filter)
     ].copy()
     
     # Convert Sales Qty to numeric, handling errors
@@ -78,7 +79,7 @@ def calculate_top_products_for_week(qlik_df: pd.DataFrame, week_str: str, top_n:
     }
 
 
-def calculate_top_products_for_weeks(base_week: str, num_weeks: int, data_root: Path, top_n: int = 20) -> List[Dict[str, Any]]:
+def calculate_top_products_for_weeks(base_week: str, num_weeks: int, data_root: Path, top_n: int = 20, customer_type: str = 'new') -> List[Dict[str, Any]]:
     """Calculate top products for multiple weeks."""
     
     results = []
@@ -123,7 +124,7 @@ def calculate_top_products_for_weeks(base_week: str, num_weeks: int, data_root: 
                 continue
             
             # Calculate top products
-            week_data = calculate_top_products_for_week(week_df, week_str, top_n)
+            week_data = calculate_top_products_for_week(week_df, week_str, top_n, customer_type)
             
             results.append(week_data)
             

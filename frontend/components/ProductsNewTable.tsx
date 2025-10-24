@@ -7,9 +7,10 @@ import { Loader2 } from 'lucide-react'
 
 interface ProductsNewTableProps {
   baseWeek: string
+  customerType: 'new' | 'returning'
 }
 
-export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
+export default function ProductsNewTable({ baseWeek, customerType }: ProductsNewTableProps) {
   const [topProductsData, setTopProductsData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
 
@@ -17,7 +18,7 @@ export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
     const loadData = async () => {
       setLoading(true)
       try {
-        const data = await getTopProducts(baseWeek, 1, 20)
+        const data = await getTopProducts(baseWeek, 1, 20, customerType)
         setTopProductsData(data)
       } catch (err) {
         console.error('Failed to load top products:', err)
@@ -26,7 +27,7 @@ export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
       }
     }
     loadData()
-  }, [baseWeek])
+  }, [baseWeek, customerType])
 
   const formatValue = (value: number): string => {
     if (value === 0) return '0'
@@ -71,7 +72,7 @@ export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
         <thead>
           <tr className="bg-gray-200 border-b">
             <th colSpan={8} className="text-center py-2 px-2 font-medium text-gray-900">
-              New Customers
+              {customerType === 'new' ? 'New Customers' : 'Returning Customers'}
             </th>
           </tr>
           <tr className="bg-gray-200 border-b">

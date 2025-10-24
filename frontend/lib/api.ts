@@ -274,8 +274,8 @@ export interface TopProductsResponse {
   }
 }
 
-export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20): Promise<TopProductsResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}`)
+export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20, customerType: 'new' | 'returning' = 'new'): Promise<TopProductsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}&customer_type=${customerType}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Top Products data: ${response.statusText}`)
   }

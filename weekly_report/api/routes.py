@@ -664,7 +664,8 @@ async def get_category_sales(
 async def get_top_products(
     base_week: str = Query(..., description="Base ISO week like '2025-42'"),
     num_weeks: int = Query(1, description="Number of weeks to analyze"),
-    top_n: int = Query(20, description="Number of top products to return")
+    top_n: int = Query(20, description="Number of top products to return"),
+    customer_type: str = Query('new', description="Customer type: 'new' or 'returning'")
 ):
     """Get Top Products metrics for the last N weeks."""
     
@@ -678,8 +679,11 @@ async def get_top_products(
         if top_n < 1 or top_n > 100:
             raise HTTPException(status_code=400, detail=f"Number of top products must be between 1 and 100")
         
+        if customer_type not in ['new', 'returning']:
+            raise HTTPException(status_code=400, detail=f"Customer type must be 'new' or 'returning'")
+        
         config = load_config(week=base_week)
-        top_products_data = calculate_top_products_for_weeks(base_week, num_weeks, config.raw_data_path, top_n)
+        top_products_data = calculate_top_products_for_weeks(base_week, num_weeks, config.raw_data_path, top_n, customer_type)
         
         # Format response
         response = TopProductsResponse(
