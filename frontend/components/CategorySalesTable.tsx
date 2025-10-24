@@ -111,11 +111,31 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
     return totals
   }
 
+  const calculateLastYearTotals = (categories: string[], gender: 'MEN' | 'WOMEN') => {
+    const totals: Record<string, number> = {}
+    weekKeys.forEach(week => {
+      totals[week] = 0
+      categories.forEach(cat => {
+        const key = `${gender}_${cat}`
+        category_sales.forEach((weekData: any) => {
+          if (weekData.week === week && weekData.last_year) {
+            totals[week] += weekData.last_year.categories[key] || 0
+          }
+        })
+      })
+    })
+    return totals
+  }
+
   const menTotals = calculateTotals(menCategories, 'MEN')
   const womenTotals = calculateTotals(womenCategories, 'WOMEN')
+  const menLastYearTotals = calculateLastYearTotals(menCategories, 'MEN')
+  const womenLastYearTotals = calculateLastYearTotals(womenCategories, 'WOMEN')
   const grandTotals: Record<string, number> = {}
+  const grandLastYearTotals: Record<string, number> = {}
   weekKeys.forEach(week => {
     grandTotals[week] = (menTotals[week] || 0) + (womenTotals[week] || 0)
+    grandLastYearTotals[week] = (menLastYearTotals[week] || 0) + (womenLastYearTotals[week] || 0)
   })
 
   // Calculate averages
@@ -181,10 +201,10 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
             weekKeys.forEach((week, index) => {
               const weekData = category_sales.find((w: any) => w.week === week)
               const lastYearWeek = lastYearWeeks[index]
-              const lastYearData = category_sales.find((w: any) => w.week === lastYearWeek)
               
               weekValues[week] = weekData?.categories[`MEN_${category}`] || 0
-              lastYearValues[lastYearWeek] = lastYearData?.categories[`MEN_${category}`] || 0
+              // Get last year data from the weekData object, not from searching category_sales
+              lastYearValues[lastYearWeek] = weekData?.last_year?.categories[`MEN_${category}`] || 0
             })
             
             const avg = Object.values(weekValues).reduce((a, b) => a + b, 0) / Object.keys(weekValues).length
@@ -246,9 +266,8 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {formatValue(menAvg)}
             </td>
             {weekKeys.map((week, weekIndex) => {
-              const lastYearWeek = lastYearWeeks[weekIndex]
               const currentValue = menTotals[week]
-              const lastYearValue = menTotals[lastYearWeek] || 0
+              const lastYearValue = menLastYearTotals[week] || 0
               const yoY = calculateYoY(currentValue, lastYearValue)
               
               return (
@@ -261,10 +280,9 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {(() => {
                 let totalYoY = 0
                 let validWeeks = 0
-                weekKeys.forEach((week, weekIndex) => {
-                  const lastYearWeek = lastYearWeeks[weekIndex]
+                weekKeys.forEach((week) => {
                   const currentValue = menTotals[week]
-                  const lastYearValue = menTotals[lastYearWeek] || 0
+                  const lastYearValue = menLastYearTotals[week] || 0
                   const yoY = calculateYoY(currentValue, lastYearValue)
                   if (yoY !== null) {
                     totalYoY += yoY
@@ -285,10 +303,10 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
             weekKeys.forEach((week, index) => {
               const weekData = category_sales.find((w: any) => w.week === week)
               const lastYearWeek = lastYearWeeks[index]
-              const lastYearData = category_sales.find((w: any) => w.week === lastYearWeek)
               
               weekValues[week] = weekData?.categories[`WOMEN_${category}`] || 0
-              lastYearValues[lastYearWeek] = lastYearData?.categories[`WOMEN_${category}`] || 0
+              // Get last year data from the weekData object, not from searching category_sales
+              lastYearValues[lastYearWeek] = weekData?.last_year?.categories[`WOMEN_${category}`] || 0
             })
             
             const avg = Object.values(weekValues).reduce((a, b) => a + b, 0) / Object.keys(weekValues).length
@@ -350,9 +368,8 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {formatValue(womenAvg)}
             </td>
             {weekKeys.map((week, weekIndex) => {
-              const lastYearWeek = lastYearWeeks[weekIndex]
               const currentValue = womenTotals[week]
-              const lastYearValue = womenTotals[lastYearWeek] || 0
+              const lastYearValue = womenLastYearTotals[week] || 0
               const yoY = calculateYoY(currentValue, lastYearValue)
               
               return (
@@ -365,10 +382,9 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {(() => {
                 let totalYoY = 0
                 let validWeeks = 0
-                weekKeys.forEach((week, weekIndex) => {
-                  const lastYearWeek = lastYearWeeks[weekIndex]
+                weekKeys.forEach((week) => {
                   const currentValue = womenTotals[week]
-                  const lastYearValue = womenTotals[lastYearWeek] || 0
+                  const lastYearValue = womenLastYearTotals[week] || 0
                   const yoY = calculateYoY(currentValue, lastYearValue)
                   if (yoY !== null) {
                     totalYoY += yoY
@@ -393,9 +409,8 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {formatValue(grandAvg)}
             </td>
             {weekKeys.map((week, weekIndex) => {
-              const lastYearWeek = lastYearWeeks[weekIndex]
               const currentValue = grandTotals[week]
-              const lastYearValue = grandTotals[lastYearWeek] || 0
+              const lastYearValue = grandLastYearTotals[week] || 0
               const yoY = calculateYoY(currentValue, lastYearValue)
               
               return (
@@ -408,10 +423,9 @@ export default function CategorySalesTable({ baseWeek }: CategorySalesTableProps
               {(() => {
                 let totalYoY = 0
                 let validWeeks = 0
-                weekKeys.forEach((week, weekIndex) => {
-                  const lastYearWeek = lastYearWeeks[weekIndex]
+                weekKeys.forEach((week) => {
                   const currentValue = grandTotals[week]
-                  const lastYearValue = grandTotals[lastYearWeek] || 0
+                  const lastYearValue = grandLastYearTotals[week] || 0
                   const yoY = calculateYoY(currentValue, lastYearValue)
                   if (yoY !== null) {
                     totalYoY += yoY
