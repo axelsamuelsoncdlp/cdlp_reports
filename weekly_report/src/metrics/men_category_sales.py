@@ -52,7 +52,8 @@ def calculate_men_category_sales_for_weeks(base_week: str, num_weeks: int, data_
     
     # Add iso_week column if not present
     if 'iso_week' not in qlik_df.columns and 'Date' in qlik_df.columns:
-        qlik_df['iso_week'] = qlik_df['Date'].apply(lambda x: pd.to_datetime(x).strftime('%Y-%W') if pd.notna(x) else None)
+        iso_cal = pd.to_datetime(qlik_df['Date']).dt.isocalendar()
+        qlik_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
     
     # Parse base week
     year, week_num = base_week.split('-')
