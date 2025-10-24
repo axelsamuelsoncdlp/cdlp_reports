@@ -70,7 +70,7 @@ export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-gray-200 border-b">
-            <th colSpan={8} className="text-center py-2 px-2 font-medium text-gray-900">
+            <th colSpan={8} className="text-center py-2 px-2 font-semibold text-lg text-gray-900">
               New Customers
             </th>
           </tr>
