@@ -79,8 +79,8 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
             if week_df.empty:
                 continue
             
-            # Group by Gender and Product Category
-            grouped = week_df.groupby(['Gender', 'Product Category']).agg({
+            # Group by Gender and Product Category (include NaN values)
+            grouped = week_df.groupby(['Gender', 'Product Category'], dropna=False).agg({
                 'Gross Revenue': 'sum'
             }).reset_index()
             
@@ -92,21 +92,40 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
             
             # Process each gender-category combination
             for _, row in grouped.iterrows():
-                gender = str(row['Gender']).upper()
-                category = str(row['Product Category'])
+                gender_raw = row['Gender']
+                category_raw = row['Product Category']
+                revenue = float(row['Gross Revenue'])
                 
-                if category == '-' or pd.isna(category):
+                # Skip rows with no revenue
+                if revenue == 0:
                     continue
+                
+                # Check if gender or category is invalid
+                gender_is_invalid = (pd.isna(gender_raw) or str(gender_raw).upper() == '-')
+                category_is_invalid = (pd.isna(category_raw) or str(category_raw) == '-')
+                
+                # Handle invalid categories by grouping them under MEN
+                if category_is_invalid:
+                    # Add to a special "Other" category for Men
+                    key = "MEN_OTHER"
+                    if key not in week_result['categories']:
+                        week_result['categories'][key] = 0
+                    week_result['categories'][key] += revenue
+                    continue
+                
+                # Convert to strings for normal processing
+                gender = str(gender_raw).upper()
+                category = str(category_raw)
                 
                 # Include ALL genders except WOMEN in MEN category
                 if gender != 'WOMEN':
                     key = f"MEN_{category}"
                     if key not in week_result['categories']:
                         week_result['categories'][key] = 0
-                    week_result['categories'][key] += float(row['Gross Revenue'])
+                    week_result['categories'][key] += revenue
                 elif gender == 'WOMEN':
                     key = f"{gender}_{category}"
-                    week_result['categories'][key] = float(row['Gross Revenue'])
+                    week_result['categories'][key] = revenue
             
             # Get last year data
             last_year = target_year - 1
@@ -116,7 +135,7 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                 last_year_df = online_df[online_df['iso_week'] == last_year_week_str].copy()
                 
                 if not last_year_df.empty:
-                    last_year_grouped = last_year_df.groupby(['Gender', 'Product Category']).agg({
+                    last_year_grouped = last_year_df.groupby(['Gender', 'Product Category'], dropna=False).agg({
                         'Gross Revenue': 'sum'
                     }).reset_index()
                     
@@ -126,21 +145,40 @@ def calculate_category_sales_for_weeks(base_week: str, num_weeks: int, data_root
                     }
                     
                     for _, row in last_year_grouped.iterrows():
-                        gender = str(row['Gender']).upper()
-                        category = str(row['Product Category'])
+                        gender_raw = row['Gender']
+                        category_raw = row['Product Category']
+                        revenue = float(row['Gross Revenue'])
                         
-                        if category == '-' or pd.isna(category):
+                        # Skip rows with no revenue
+                        if revenue == 0:
                             continue
+                        
+                        # Check if gender or category is invalid
+                        gender_is_invalid = (pd.isna(gender_raw) or str(gender_raw).upper() == '-')
+                        category_is_invalid = (pd.isna(category_raw) or str(category_raw) == '-')
+                        
+                        # Handle invalid categories by grouping them under MEN
+                        if category_is_invalid:
+                            # Add to a special "Other" category for Men
+                            key = "MEN_OTHER"
+                            if key not in last_year_result['categories']:
+                                last_year_result['categories'][key] = 0
+                            last_year_result['categories'][key] += revenue
+                            continue
+                        
+                        # Convert to strings for normal processing
+                        gender = str(gender_raw).upper()
+                        category = str(category_raw)
                         
                         # Include ALL genders except WOMEN in MEN category
                         if gender != 'WOMEN':
                             key = f"MEN_{category}"
                             if key not in last_year_result['categories']:
                                 last_year_result['categories'][key] = 0
-                            last_year_result['categories'][key] += float(row['Gross Revenue'])
+                            last_year_result['categories'][key] += revenue
                         elif gender == 'WOMEN':
                             key = f"{gender}_{category}"
-                            last_year_result['categories'][key] = float(row['Gross Revenue'])
+                            last_year_result['categories'][key] = revenue
                     
                     week_result['last_year'] = last_year_result
                 else:
