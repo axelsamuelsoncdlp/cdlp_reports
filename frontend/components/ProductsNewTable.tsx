@@ -70,14 +70,24 @@ export default function ProductsNewTable({ baseWeek }: ProductsNewTableProps) {
       <table className="w-full text-xs">
         <thead>
           <tr className="bg-gray-200 border-b">
-            <th className="text-left py-2 px-2 font-medium text-gray-900">Rank</th>
-            <th className="text-left py-2 px-2 font-medium text-gray-900">Gender</th>
-            <th className="text-left py-2 px-2 font-medium text-gray-900">Category</th>
-            <th className="text-left py-2 px-2 font-medium text-gray-900">Product</th>
-            <th className="text-left py-2 px-2 font-medium text-gray-900">Color</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-900">Gross Revenue</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-900">Sales Qty</th>
-            <th className="text-right py-2 px-2 font-medium text-gray-900">SoB%</th>
+            <th rowSpan={2} className="text-left py-2 px-2 font-medium text-gray-900">Rank</th>
+            <th rowSpan={2} className="text-left py-2 px-2 font-medium text-gray-900">Gender</th>
+            <th rowSpan={2} className="text-left py-2 px-2 font-medium text-gray-900">Category</th>
+            <th rowSpan={2} className="text-left py-2 px-2 font-medium text-gray-900">Product</th>
+            <th rowSpan={2} className="text-left py-2 px-2 font-medium text-gray-900">Color</th>
+            <th rowSpan={2} className="text-right py-2 px-2 font-medium text-gray-900">Gross Revenue</th>
+            <th rowSpan={2} className="text-right py-2 px-2 font-medium text-gray-900">Sales Qty</th>
+            <th rowSpan={2} className="text-right py-2 px-2 font-medium text-gray-900">SoB%</th>
+          </tr>
+          <tr className="bg-gray-200 border-b">
+            <th colSpan={8} className="text-center py-2 px-2 font-medium text-gray-900">
+              New Customers
+            </th>
+          </tr>
+          <tr className="bg-gray-200 border-b">
+            <th colSpan={8} className="text-center py-1 px-2 text-xs text-gray-600">
+              (SEK '000)
+            </th>
           </tr>
         </thead>
         <tbody>
