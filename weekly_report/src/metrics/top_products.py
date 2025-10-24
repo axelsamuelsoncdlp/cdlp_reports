@@ -10,8 +10,11 @@ from weekly_report.src.metrics.table1 import load_all_raw_data
 def calculate_top_products_for_week(qlik_df: pd.DataFrame, week_str: str, top_n: int = 20) -> Dict[str, Any]:
     """Calculate top N products for a single week."""
     
-    # Filter for online sales only
-    online_df = qlik_df[qlik_df['Sales Channel'] == 'Online'].copy()
+    # Filter for online sales and new customers only
+    online_df = qlik_df[
+        (qlik_df['Sales Channel'] == 'Online') & 
+        (qlik_df['New/Returning Customer'] == 'New')
+    ].copy()
     
     # Convert Sales Qty to numeric, handling errors
     online_df['Sales Qty'] = pd.to_numeric(online_df['Sales Qty'], errors='coerce').fillna(0)
