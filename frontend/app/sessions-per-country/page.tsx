@@ -1,7 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { getSessionsPerCountry } from '@/lib/api'
+import { useSessionsPerCountry } from '@/contexts/DataCacheContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
@@ -9,23 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 
 export default function SessionsPerCountry() {
-  const [sessionsData, setSessionsData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const loadData = async () => {
-      setLoading(true)
-      try {
-        const data = await getSessionsPerCountry('2025-42', 8)
-        setSessionsData(data)
-      } catch (err) {
-        console.error('Failed to load sessions per country:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadData()
-  }, [])
+  const { sessions_per_country } = useSessionsPerCountry()
 
   // Define country order and labels
   const countryOrder = [
@@ -45,7 +28,7 @@ export default function SessionsPerCountry() {
     return Math.round(value).toLocaleString('sv-SE')
   }
 
-  if (loading || !sessionsData) {
+  if (!sessions_per_country) {
     return (
       <div className="space-y-8">
         <div className="flex items-center gap-3 mb-6">
@@ -76,7 +59,7 @@ export default function SessionsPerCountry() {
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
         {countryOrder.map((country, index) => {
-          const chartData = sessionsData.sessions_per_country.map((week: any) => {
+          const chartData = sessions_per_country.sessions_per_country.map((week: any) => {
             const weekNum = week.week.split('-')[1]
             let currentValue = 0
             let lastYearValue = 0

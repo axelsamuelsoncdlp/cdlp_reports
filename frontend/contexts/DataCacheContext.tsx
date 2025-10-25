@@ -10,6 +10,7 @@ import {
   getGenderSales,
   getMenCategorySales,
   getWomenCategorySales,
+  getSessionsPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -17,11 +18,12 @@ import {
   type ContributionResponse,
   type GenderSalesResponse,
   type MenCategorySalesResponse,
-  type WomenCategorySalesResponse
+  type WomenCategorySalesResponse,
+  type SessionsPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -37,6 +39,7 @@ interface CacheData {
   gender_sales: GenderSalesResponse | null
   men_category_sales: MenCategorySalesResponse | null
   women_category_sales: WomenCategorySalesResponse | null
+  sessions_per_country: SessionsPerCountryResponse | null
   timestamp: number
 }
 
@@ -49,6 +52,7 @@ interface DataCacheContextType {
   gender_sales: GenderSalesResponse | null
   men_category_sales: MenCategorySalesResponse | null
   women_category_sales: WomenCategorySalesResponse | null
+  sessions_per_country: SessionsPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -73,6 +77,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [gender_sales, setGender_sales] = useState<GenderSalesResponse | null>(null)
   const [men_category_sales, setMen_category_sales] = useState<MenCategorySalesResponse | null>(null)
   const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(null)
+  const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -123,6 +128,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setGender_sales(cached.gender_sales)
         setMen_category_sales(cached.men_category_sales)
         setWomen_category_sales(cached.women_category_sales)
+        setSessions_per_country(cached.sessions_per_country)
         return
       }
     }
@@ -211,17 +217,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'women_category_sales', 
         stepNumber: 8, 
-        totalSteps: 8, 
+        totalSteps: 9, 
         message: 'Loading women category sales...', 
         percentage: 87 
       })
       const womenCategorySalesData = await getWomenCategorySales(week, 8)
       setWomen_category_sales(womenCategorySalesData)
 
+      // Step 9: Load Sessions per Country
+      setLoadingProgress({ 
+        step: 'sessions_per_country', 
+        stepNumber: 9, 
+        totalSteps: 9, 
+        message: 'Loading sessions per country...', 
+        percentage: 94 
+      })
+      const sessionsPerCountryData = await getSessionsPerCountry(week, 8)
+      setSessions_per_country(sessionsPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 8, 
-        totalSteps: 8, 
+        stepNumber: 9, 
+        totalSteps: 9, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -236,6 +253,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         gender_sales: genderSalesData,
         men_category_sales: menCategorySalesData,
         women_category_sales: womenCategorySalesData,
+        sessions_per_country: sessionsPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -263,6 +281,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setGender_sales(null)
       setMen_category_sales(null)
       setWomen_category_sales(null)
+      setSessions_per_country(null)
     } catch (err) {
       console.warn('Failed to clear cache:', err)
     }
@@ -282,6 +301,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     gender_sales,
     men_category_sales,
     women_category_sales,
+    sessions_per_country,
     loading,
     error,
     loadingProgress,
@@ -341,4 +361,9 @@ export function useMenCategorySales() {
 export function useWomenCategorySales() {
   const { women_category_sales } = useDataCache()
   return { women_category_sales }
+}
+
+export function useSessionsPerCountry() {
+  const { sessions_per_country } = useDataCache()
+  return { sessions_per_country }
 }
