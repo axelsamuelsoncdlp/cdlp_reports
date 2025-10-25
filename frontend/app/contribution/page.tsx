@@ -11,11 +11,11 @@ export default function Contribution() {
   const { contributions } = useContribution()
 
   const contributionLabels = [
-    { key: 'gross_revenue_new', label: 'Gross Revenue New Customer', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'gross_revenue_returning', label: 'Gross Revenue Returning Customer', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'contribution_new', label: 'Total New Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'contribution_returning', label: 'Total Returning Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() + 'k' },
-    { key: 'contribution_total', label: 'Total Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() + 'k' }
+    { key: 'gross_revenue_new', label: 'Gross Revenue New Customer', format: (val: number) => Math.round(val / 1000).toString() },
+    { key: 'gross_revenue_returning', label: 'Gross Revenue Returning Customer', format: (val: number) => Math.round(val / 1000).toString() },
+    { key: 'contribution_new', label: 'Total New Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() },
+    { key: 'contribution_returning', label: 'Total Returning Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() },
+    { key: 'contribution_total', label: 'Total Customer Contribution', format: (val: number) => Math.round(val / 1000).toString() }
   ]
 
   // Reorder labels for custom layout
