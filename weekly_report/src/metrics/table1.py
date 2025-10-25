@@ -5,7 +5,7 @@ from typing import Dict, Any, Optional
 from pathlib import Path
 from loguru import logger
 
-from weekly_report.src.adapters import qlik, dema, dema_gm2
+from weekly_report.src.adapters import qlik, dema, dema_gm2, shopify
 from weekly_report.src.periods.calculator import get_week_date_range, get_ytd_periods_for_week
 from weekly_report.src.cache.manager import RawDataCache
 
@@ -208,6 +208,14 @@ def load_all_raw_data(data_path: Path) -> Dict[str, pd.DataFrame]:
     except FileNotFoundError as e:
         logger.error(f"Dema GM2 data not found: {e}")
         raise
+    
+    # Load Shopify data
+    try:
+        data_sources['shopify'] = shopify.load_data(data_path)
+        logger.info(f"Loaded Shopify data: {data_sources['shopify'].shape}")
+    except FileNotFoundError as e:
+        logger.warning(f"Shopify data not found: {e}")
+        data_sources['shopify'] = pd.DataFrame()
     
     # Cache the loaded data
     raw_data_cache.set(data_path_str, data_sources)

@@ -17,8 +17,21 @@ def calculate_sessions_per_country_for_week(shopify_df: pd.DataFrame, week_str: 
             'countries': {}
         }
     
+    # Check if 'Session country' column exists (with space) or 'Country' column
+    country_col = None
+    if 'Session country' in shopify_df.columns:
+        country_col = 'Session country'
+    elif 'Country' in shopify_df.columns:
+        country_col = 'Country'
+    else:
+        logger.warning(f"No country column found in Shopify data. Available columns: {shopify_df.columns.tolist()}")
+        return {
+            'week': week_str,
+            'countries': {}
+        }
+    
     # Group by country and sum sessions
-    country_sessions = shopify_df.groupby('Country').agg({
+    country_sessions = shopify_df.groupby(country_col).agg({
         'Sessions': 'sum'
     }).reset_index()
     
@@ -30,7 +43,7 @@ def calculate_sessions_per_country_for_week(shopify_df: pd.DataFrame, week_str: 
     
     # Add each country's sessions
     for _, row in country_sessions.iterrows():
-        country = row['Country']
+        country = row[country_col]
         if pd.notna(country) and country != '-':
             result['countries'][country] = float(row['Sessions'])
     
@@ -52,9 +65,20 @@ def calculate_sessions_per_country_for_weeks(base_week: str, num_weeks: int, dat
         return []
     
     # Add iso_week column if not present
-    if 'iso_week' not in shopify_df.columns and 'Date' in shopify_df.columns:
-        iso_cal = pd.to_datetime(shopify_df['Date']).dt.isocalendar()
-        shopify_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+    if 'iso_week' not in shopify_df.columns:
+        # Try to find date column
+        date_col = None
+        if 'Date' in shopify_df.columns:
+            date_col = 'Date'
+        elif 'Day' in shopify_df.columns:
+            date_col = 'Day'
+        
+        if date_col:
+            iso_cal = pd.to_datetime(shopify_df[date_col]).dt.isocalendar()
+            shopify_df['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+        else:
+            logger.warning(f"No date column found in Shopify data. Available columns: {shopify_df.columns.tolist()}")
+            return []
     
     # Parse base week
     year, week_num = base_week.split('-')
