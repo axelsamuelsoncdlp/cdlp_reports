@@ -2,15 +2,19 @@
 
 import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import FileUpload from '@/components/FileUpload'
 import FileMetadata from '@/components/FileMetadata'
 import PeriodSelector from '@/components/PeriodSelector'
 import { Separator } from '@/components/ui/separator'
+import { useDataCache } from '@/contexts/DataCacheContext'
+import { Loader2, RefreshCw } from 'lucide-react'
 
 export default function Settings() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
   const [periods, setPeriods] = useState(null)
   const [metadata, setMetadata] = useState<any>(null)
+  const { refreshData, loading, loadingProgress } = useDataCache()
 
   const loadMetadata = async (clearCache = false) => {
     // Check cache first
@@ -78,6 +82,35 @@ export default function Settings() {
               onWeekChange={setSelectedWeek}
               onPeriodsChange={setPeriods}
             />
+          </div>
+
+          <Separator />
+
+          <div>
+            <h3 className="text-sm font-medium mb-3">Data Management</h3>
+            <div className="flex items-center gap-4">
+              <Button
+                onClick={refreshData}
+                disabled={loading}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <RefreshCw className="h-4 w-4" />
+                )}
+                {loading ? 'Refreshing...' : 'Refresh All Data'}
+              </Button>
+              {loading && loadingProgress && (
+                <div className="text-sm text-gray-600">
+                  {loadingProgress.message} ({loadingProgress.percentage}%)
+                </div>
+              )}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Manually trigger data loading process. This will refresh all cached data.
+            </p>
           </div>
 
           <Separator />
