@@ -13,8 +13,8 @@ export default function SessionsPerCountry() {
   // Define country order and labels
   const countryOrder = [
     { key: 'Total', label: 'Total' },
-    { key: 'USA', label: 'USA' },
-    { key: 'UK', label: 'UK' },
+    { key: 'United States', label: 'USA' },
+    { key: 'United Kingdom', label: 'UK' },
     { key: 'Sweden', label: 'Sverige' },
     { key: 'Germany', label: 'Tyskland' },
     { key: 'Australia', label: 'Australien' },
@@ -72,7 +72,7 @@ export default function SessionsPerCountry() {
               }
             } else if (country.key === 'ROW') {
               // Calculate ROW (Rest of World) - all countries except the main ones
-              const mainCountries = ['USA', 'UK', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
+              const mainCountries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
               currentValue = Object.entries(week.countries).reduce((sum: number, [countryName, sessions]: [string, any]) => {
                 if (!mainCountries.includes(countryName)) {
                   return sum + sessions
