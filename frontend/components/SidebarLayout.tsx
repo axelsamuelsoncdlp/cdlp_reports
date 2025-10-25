@@ -9,6 +9,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [isGeneralOpen, setIsGeneralOpen] = useState(true)
+  const [isMarketingOpen, setIsMarketingOpen] = useState(true)
 
   const isActive = (path: string) => pathname === path
 
@@ -164,6 +165,42 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     >
                       <IconChartBar className="h-4 w-4" />
                       Products Gender
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Marketing Dropdown */}
+              <div>
+                <button
+                  onClick={() => setIsMarketingOpen(!isMarketingOpen)}
+                  className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive('/sessions-per-country')
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <IconTrendingUp className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">Marketing</span>
+                      {isMarketingOpen ? <IconChevronDown className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
+                    </>
+                  )}
+                </button>
+                
+                {!isCollapsed && isMarketingOpen && (
+                  <div className="ml-4 mt-1 space-y-1">
+                    <Link
+                      href="/sessions-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/sessions-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Sessions per Country
                     </Link>
                   </div>
                 )}
