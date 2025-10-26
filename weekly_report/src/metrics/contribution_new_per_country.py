@@ -40,14 +40,19 @@ def calculate_contribution_new_per_country_for_week(
     country_spend['New customer spend'] = country_spend['Marketing spend'] * 0.70
     
     # Get GM2 per country for new customers
+    logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
+    
     if 'Country' in dema_gm2_df.columns and 'New vs Returning Customer' in dema_gm2_df.columns:
         new_gm2_df = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
+        logger.info(f"Week {week_str}: New GM2 rows: {len(new_gm2_df)}")
+        logger.info(f"Week {week_str}: GM2 countries: {new_gm2_df['Country'].unique().tolist()}")
         
         # Calculate GM2 percentage per country
         country_gm2 = new_gm2_df.groupby('Country').agg({
             'Gross margin 2 - Dema MTA': 'mean'
         }).reset_index()
         country_gm2.columns = ['Country', 'gm2_pct']
+        logger.info(f"Week {week_str}: GM2 per country:\n{country_gm2}")
     else:
         logger.warning(f"Country or customer type not found in GM2 data for week {week_str}")
         return {
@@ -68,6 +73,12 @@ def calculate_contribution_new_per_country_for_week(
     
     # Count new customers per country (already calculated above)
     
+    # Debug: Show individual dataframes
+    logger.info(f"Week {week_str}: Revenue countries: {country_revenue['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str}: GM2 countries: {country_gm2['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str}: Spend countries: {country_spend['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str}: Customer countries: {country_customers['Country'].unique().tolist()}")
+    
     # Merge all data
     merged_df = pd.merge(
         pd.merge(country_revenue, country_gm2, on='Country', how='outer'),
@@ -75,6 +86,9 @@ def calculate_contribution_new_per_country_for_week(
         on='Country',
         how='outer'
     ).fillna(0)
+    
+    logger.info(f"Week {week_str}: After merge, shape: {merged_df.shape}")
+    logger.info(f"Week {week_str}: After merge, countries: {merged_df['Country'].unique().tolist()}")
     
     # Calculate GM2 in SEK per country = Gross Revenue * GM2 percentage
     merged_df['gm2_sek'] = merged_df['gross_revenue'] * merged_df['gm2_pct']
