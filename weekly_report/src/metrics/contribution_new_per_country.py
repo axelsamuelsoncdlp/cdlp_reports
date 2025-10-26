@@ -117,6 +117,24 @@ def calculate_contribution_new_per_country_for_week(
     
     result['countries']['Total'] = float(total_contribution_per_customer)
     
+    # Calculate ROW (Rest of World) - aggregate of smaller countries
+    # Main countries to exclude
+    main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
+    
+    row_df = merged_df[~merged_df['Country'].isin(main_countries)]
+    
+    row_gm2_sek = row_df['gm2_sek'].sum()
+    row_marketing_spend = row_df['New customer spend'].sum()
+    row_contribution = row_gm2_sek - row_marketing_spend
+    row_customers = row_df['new_customers'].sum()
+    
+    if row_customers > 0:
+        row_contribution_per_customer = row_contribution / row_customers
+    else:
+        row_contribution_per_customer = 0
+    
+    result['countries']['ROW'] = float(row_contribution_per_customer)
+    
     return result
 
 

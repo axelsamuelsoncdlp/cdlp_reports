@@ -73,6 +73,20 @@ def calculate_ncac_per_country_for_week(
     
     result['countries']['Total'] = float(total_ncac)
     
+    # Calculate ROW (Rest of World) - aggregate of smaller countries
+    # Main countries to exclude
+    main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
+    
+    row_marketing_spend = merged_df[~merged_df['Country'].isin(main_countries)]['New customer spend'].sum()
+    row_customers = merged_df[~merged_df['Country'].isin(main_countries)]['new_customers'].sum()
+    
+    if row_customers > 0:
+        row_ncac = row_marketing_spend / row_customers
+    else:
+        row_ncac = 0
+    
+    result['countries']['ROW'] = float(row_ncac)
+    
     return result
 
 

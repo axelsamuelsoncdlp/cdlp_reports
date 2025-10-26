@@ -71,21 +71,10 @@ export default function NCACPerCountry() {
                 lastYearValue = week.last_year.countries['Total'] || 0
               }
             } else if (country.key === 'ROW') {
-              // Calculate ROW (Rest of World) - all countries except the main ones
-              const mainCountries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
-              currentValue = Object.entries(week.countries).reduce((sum: number, [countryName, customers]: [string, any]) => {
-                if (!mainCountries.includes(countryName)) {
-                  return sum + customers
-                }
-                return sum
-              }, 0)
+              // Use ROW directly from backend calculation
+              currentValue = week.countries['ROW'] || 0
               if (week.last_year) {
-                lastYearValue = Object.entries(week.last_year.countries).reduce((sum: number, [countryName, customers]: [string, any]) => {
-                  if (!mainCountries.includes(countryName)) {
-                    return sum + customers
-                  }
-                  return sum
-                }, 0)
+                lastYearValue = week.last_year.countries['ROW'] || 0
               }
             } else {
               // Specific country
