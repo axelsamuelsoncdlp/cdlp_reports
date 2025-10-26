@@ -25,7 +25,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/category-sales': { title: 'Category Sales', subtitle: 'Sales by category with YoY growth' },
       '/products-new': { title: 'Products New', subtitle: 'Top products for new and returning customers' },
       '/products-gender': { title: 'Products Gender', subtitle: 'Top products by gender' },
-      '/sessions-per-country': { title: 'Sessions per Country', subtitle: 'Website traffic by country' },
+      '/sessions-per-country': { title: 'Sessions per Country', subtitle: '('000)' },
       '/conversion-per-country': { title: 'Conversion per Country', subtitle: 'Conversion rates by country' },
       '/new-customers-per-country': { title: 'New Customers per Country', subtitle: 'New customer acquisition by country' },
       '/returning-customers-per-country': { title: 'Returning Customers per Country', subtitle: 'Returning customers by country' },
