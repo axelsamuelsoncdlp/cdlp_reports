@@ -33,7 +33,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/aov-returning-customers-per-country': { title: 'AOV Returning Customers per Country', subtitle: 'Average order value for returning customers by country' },
       '/marketing-spend-per-country': { title: 'Marketing Spend per Country', subtitle: 'Marketing expenditure by country' },
       '/ncac-per-country': { title: 'nCAC per Country', subtitle: 'New customer acquisition cost by country' },
-      '/contribution-new-per-country': { title: 'Contribution New Customer per Country', subtitle: 'Contribution per new customer by country' },
+      '/contribution-new-per-country': { title: 'Contribution New Customer per Country', subtitle: '(SEK)' },
       '/contribution-new-total-per-country': { title: 'Contribution New Total per Country', subtitle: 'Total contribution from new customers by country' },
       '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: 'Contribution per returning customer by country' },
       '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: 'Total contribution from returning customers by country' },
