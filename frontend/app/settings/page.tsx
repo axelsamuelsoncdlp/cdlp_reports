@@ -11,11 +11,16 @@ import { useDataCache } from '@/contexts/DataCacheContext'
 import { Loader2, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
 
 export default function Settings() {
-  const [selectedWeek, setSelectedWeek] = useState('2025-42')
+  const { refreshData, loading, loadingProgress, baseWeek, setBaseWeek } = useDataCache()
+  const [selectedWeek, setSelectedWeek] = useState(baseWeek)
   const [periods, setPeriods] = useState(null)
   const [metadata, setMetadata] = useState<any>(null)
   const [dimensions, setDimensions] = useState<any>(null)
-  const { refreshData, loading, loadingProgress } = useDataCache()
+  
+  // Sync selectedWeek with baseWeek from context
+  useEffect(() => {
+    setSelectedWeek(baseWeek)
+  }, [baseWeek])
 
   const loadMetadata = async (clearCache = false) => {
     // Check cache first
@@ -135,7 +140,11 @@ export default function Settings() {
             <h3 className="text-sm font-medium mb-3">Select Week</h3>
             <PeriodSelector 
               selectedWeek={selectedWeek}
-              onWeekChange={setSelectedWeek}
+              onWeekChange={(week) => {
+                setSelectedWeek(week)
+                // Update the global baseWeek in DataCacheContext
+                setBaseWeek(week)
+              }}
               onPeriodsChange={setPeriods}
             />
           </div>
