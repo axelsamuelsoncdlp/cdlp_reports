@@ -52,7 +52,7 @@ def calculate_contribution_for_weeks(base_week: str, num_weeks: int, data_root: 
     logger.info(f"Calculating Contribution metrics for weeks: {weeks_to_analyze}")
     
     # Load data
-    latest_data_path = data_root / "raw" / base_week
+    latest_data_path = data_root / "raw"  # Single directory, not week-specific
     qlik_df = pd.DataFrame()
     dema_df = pd.DataFrame()
     dema_gm2_df = pd.DataFrame()
