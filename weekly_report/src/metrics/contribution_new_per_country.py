@@ -39,39 +39,53 @@ def calculate_contribution_new_per_country_for_week(
     }).reset_index()
     country_spend['New customer spend'] = country_spend['Marketing spend'] * 0.70
     
-    # Get GM2 per country for new customers
-    logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
-    
-    if 'Country' in dema_gm2_df.columns and 'New vs Returning Customer' in dema_gm2_df.columns:
-        new_gm2_df = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
-        logger.info(f"Week {week_str}: New GM2 rows: {len(new_gm2_df)}")
-        logger.info(f"Week {week_str}: GM2 countries: {new_gm2_df['Country'].unique().tolist()}")
-        
-        # Calculate GM2 percentage per country
-        country_gm2 = new_gm2_df.groupby('Country').agg({
-            'Gross margin 2 - Dema MTA': 'mean'
-        }).reset_index()
-        country_gm2.columns = ['Country', 'gm2_pct']
-        logger.info(f"Week {week_str}: GM2 per country:\n{country_gm2}")
-    else:
-        logger.warning(f"Country or customer type not found in GM2 data for week {week_str}")
-        return {
-            'week': week_str,
-            'countries': {}
-        }
-    
     # Get gross revenue per country for new customers  
     country_revenue = new_customers_df.groupby('Country').agg({
         'Gross Revenue': 'sum'
     }).reset_index()
     country_revenue.columns = ['Country', 'gross_revenue']
     
+    # Get GM2 per country for new customers
+    logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
+    
+    if 'New vs Returning Customer' in dema_gm2_df.columns:
+        new_gm2_df = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
+        logger.info(f"Week {week_str}: New GM2 rows: {len(new_gm2_df)}")
+        
+        if 'Country' in dema_gm2_df.columns:
+            # GM2 has country dimension
+            logger.info(f"Week {week_str}: GM2 countries: {new_gm2_df['Country'].unique().tolist()}")
+            country_gm2 = new_gm2_df.groupby('Country').agg({
+                'Gross margin 2 - Dema MTA': 'mean'
+            }).reset_index()
+            country_gm2.columns = ['Country', 'gm2_pct']
+            logger.info(f"Week {week_str}: GM2 per country:\n{country_gm2}")
+        else:
+            # GM2 doesn't have country dimension - use overall average
+            logger.info(f"Week {week_str}: No country dimension in GM2, using overall average")
+            overall_gm2_pct = new_gm2_df['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_gm2_df.columns else 0
+            
+            # Create a dummy country_gm2 with the overall percentage for all countries
+            # We'll assign the same GM2% to all countries from revenue data
+            country_gm2 = country_revenue[['Country']].copy()
+            country_gm2['gm2_pct'] = overall_gm2_pct
+            logger.info(f"Week {week_str}: Using overall GM2%: {overall_gm2_pct} for all countries")
+    else:
+        logger.warning(f"Customer type not found in GM2 data for week {week_str}")
+        return {
+            'week': week_str,
+            'countries': {}
+        }
+    
     # Calculate total for all countries
     total_revenue = country_revenue['gross_revenue'].sum()
     total_new_customers = country_customers['new_customers'].sum()
     total_marketing_spend = country_spend['New customer spend'].sum()
     
-    # Count new customers per country (already calculated above)
+    # Count new customers per country
+    country_customers = new_customers_df.groupby('Country').agg(
+        new_customers=('Customer E-mail', 'nunique')
+    ).reset_index()
     
     # Debug: Show individual dataframes
     logger.info(f"Week {week_str}: Revenue countries: {country_revenue['Country'].unique().tolist()}")
