@@ -175,7 +175,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 <button
                   onClick={() => setIsMarketingOpen(!isMarketingOpen)}
                   className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive('/sessions-per-country') || isActive('/conversion-per-country') || isActive('/new-customers-per-country')
+                    isActive('/sessions-per-country') || isActive('/conversion-per-country') || isActive('/new-customers-per-country') || isActive('/returning-customers-per-country')
                       ? 'bg-gray-200 text-gray-900'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -183,7 +183,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   <IconTrendingUp className="h-4 w-4 flex-shrink-0" />
                   {!isCollapsed && (
                     <>
-                      <span className="flex-1 text-left">Marketing</span>
+                      <span className="flex-1 text-left">Markets</span>
                       {isMarketingOpen ? <IconChevronDown className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
                     </>
                   )}
@@ -223,6 +223,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     >
                       <IconChartBar className="h-4 w-4" />
                       New Customers
+                    </Link>
+                    <Link
+                      href="/returning-customers-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/returning-customers-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Returning Customers
                     </Link>
                   </div>
                 )}

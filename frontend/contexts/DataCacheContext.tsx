@@ -13,6 +13,7 @@ import {
   getSessionsPerCountry,
   getConversionPerCountry,
   getNewCustomersPerCountry,
+  getReturningCustomersPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -23,11 +24,12 @@ import {
   type WomenCategorySalesResponse,
   type SessionsPerCountryResponse,
   type ConversionPerCountryResponse,
-  type NewCustomersPerCountryResponse
+  type NewCustomersPerCountryResponse,
+  type ReturningCustomersPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'returning_customers_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -46,6 +48,7 @@ interface CacheData {
   sessions_per_country: SessionsPerCountryResponse | null
   conversion_per_country: ConversionPerCountryResponse | null
   new_customers_per_country: NewCustomersPerCountryResponse | null
+  returning_customers_per_country: ReturningCustomersPerCountryResponse | null
   timestamp: number
 }
 
@@ -61,6 +64,7 @@ interface DataCacheContextType {
   sessions_per_country: SessionsPerCountryResponse | null
   conversion_per_country: ConversionPerCountryResponse | null
   new_customers_per_country: NewCustomersPerCountryResponse | null
+  returning_customers_per_country: ReturningCustomersPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -88,6 +92,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(null)
   const [conversion_per_country, setConversion_per_country] = useState<ConversionPerCountryResponse | null>(null)
   const [new_customers_per_country, setNew_customers_per_country] = useState<NewCustomersPerCountryResponse | null>(null)
+  const [returning_customers_per_country, setReturning_customers_per_country] = useState<ReturningCustomersPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -141,6 +146,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setSessions_per_country(cached.sessions_per_country)
         setConversion_per_country(cached.conversion_per_country)
         setNew_customers_per_country(cached.new_customers_per_country)
+        setReturning_customers_per_country(cached.returning_customers_per_country)
         return
       }
     }
@@ -262,17 +268,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'new_customers_per_country', 
         stepNumber: 11, 
-        totalSteps: 11, 
+        totalSteps: 12, 
         message: 'Loading new customers per country...', 
-        percentage: 95 
+        percentage: 92 
       })
       const newCustomersPerCountryData = await getNewCustomersPerCountry(week, 8)
       setNew_customers_per_country(newCustomersPerCountryData)
 
+      // Step 12: Load Returning Customers per Country
+      setLoadingProgress({ 
+        step: 'returning_customers_per_country', 
+        stepNumber: 12, 
+        totalSteps: 12, 
+        message: 'Loading returning customers per country...', 
+        percentage: 97 
+      })
+      const returningCustomersPerCountryData = await getReturningCustomersPerCountry(week, 8)
+      setReturning_customers_per_country(returningCustomersPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 11, 
-        totalSteps: 11, 
+        stepNumber: 12, 
+        totalSteps: 12, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -290,6 +307,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         sessions_per_country: sessionsPerCountryData,
         conversion_per_country: conversionPerCountryData,
         new_customers_per_country: newCustomersPerCountryData,
+        returning_customers_per_country: returningCustomersPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -340,6 +358,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     sessions_per_country,
     conversion_per_country,
     new_customers_per_country,
+    returning_customers_per_country,
     loading,
     error,
     loadingProgress,
@@ -414,4 +433,9 @@ export function useConversionPerCountry() {
 export function useNewCustomersPerCountry() {
   const { new_customers_per_country } = useDataCache()
   return { new_customers_per_country }
+}
+
+export function useReturningCustomersPerCountry() {
+  const { returning_customers_per_country } = useDataCache()
+  return { returning_customers_per_country }
 }
