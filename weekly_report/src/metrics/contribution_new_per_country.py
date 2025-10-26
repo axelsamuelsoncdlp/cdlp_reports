@@ -45,6 +45,11 @@ def calculate_contribution_new_per_country_for_week(
     }).reset_index()
     country_revenue.columns = ['Country', 'gross_revenue']
     
+    # Count new customers per country
+    country_customers = new_customers_df.groupby('Country').agg(
+        new_customers=('Customer E-mail', 'nunique')
+    ).reset_index()
+    
     # Get GM2 per country for new customers
     logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
     
@@ -81,11 +86,6 @@ def calculate_contribution_new_per_country_for_week(
     total_revenue = country_revenue['gross_revenue'].sum()
     total_new_customers = country_customers['new_customers'].sum()
     total_marketing_spend = country_spend['New customer spend'].sum()
-    
-    # Count new customers per country
-    country_customers = new_customers_df.groupby('Country').agg(
-        new_customers=('Customer E-mail', 'nunique')
-    ).reset_index()
     
     # Debug: Show individual dataframes
     logger.info(f"Week {week_str}: Revenue countries: {country_revenue['Country'].unique().tolist()}")
