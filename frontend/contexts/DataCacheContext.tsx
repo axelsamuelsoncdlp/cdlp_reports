@@ -291,7 +291,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       
       // Individual calls (fallback or primary if batch disabled)
       if (!batchMode) {
-      // Step 1: Load periods
+        // Step 1: Load periods
       setLoadingProgress({ 
         step: 'periods', 
         stepNumber: 1, 
@@ -556,8 +556,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
           total_contribution_per_country: totalContributionPerCountryData,
           timestamp: Date.now()
         })
+        }
       }
-      } // Close if (!batchMode) block
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       console.error('Error loading dashboard data:', err)
