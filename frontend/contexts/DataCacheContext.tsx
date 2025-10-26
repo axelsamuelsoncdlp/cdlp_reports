@@ -11,6 +11,7 @@ import {
   getMenCategorySales,
   getWomenCategorySales,
   getSessionsPerCountry,
+  getConversionPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -19,11 +20,12 @@ import {
   type GenderSalesResponse,
   type MenCategorySalesResponse,
   type WomenCategorySalesResponse,
-  type SessionsPerCountryResponse
+  type SessionsPerCountryResponse,
+  type ConversionPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -40,6 +42,7 @@ interface CacheData {
   men_category_sales: MenCategorySalesResponse | null
   women_category_sales: WomenCategorySalesResponse | null
   sessions_per_country: SessionsPerCountryResponse | null
+  conversion_per_country: ConversionPerCountryResponse | null
   timestamp: number
 }
 
@@ -53,6 +56,7 @@ interface DataCacheContextType {
   men_category_sales: MenCategorySalesResponse | null
   women_category_sales: WomenCategorySalesResponse | null
   sessions_per_country: SessionsPerCountryResponse | null
+  conversion_per_country: ConversionPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -78,6 +82,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [men_category_sales, setMen_category_sales] = useState<MenCategorySalesResponse | null>(null)
   const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(null)
   const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(null)
+  const [conversion_per_country, setConversion_per_country] = useState<ConversionPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
