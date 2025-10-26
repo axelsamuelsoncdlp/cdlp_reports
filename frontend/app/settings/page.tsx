@@ -8,12 +8,13 @@ import FileMetadata from '@/components/FileMetadata'
 import PeriodSelector from '@/components/PeriodSelector'
 import { Separator } from '@/components/ui/separator'
 import { useDataCache } from '@/contexts/DataCacheContext'
-import { Loader2, RefreshCw } from 'lucide-react'
+import { Loader2, RefreshCw, CheckCircle2, XCircle } from 'lucide-react'
 
 export default function Settings() {
   const [selectedWeek, setSelectedWeek] = useState('2025-42')
   const [periods, setPeriods] = useState(null)
   const [metadata, setMetadata] = useState<any>(null)
+  const [dimensions, setDimensions] = useState<any>(null)
   const { refreshData, loading, loadingProgress } = useDataCache()
 
   const loadMetadata = async (clearCache = false) => {
@@ -69,10 +70,25 @@ export default function Settings() {
     }
   }
 
+  const loadDimensions = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/file-dimensions?week=${selectedWeek}`)
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dimensions: ${response.statusText}`)
+      }
+      const data = await response.json()
+      setDimensions(data)
+    } catch (error) {
+      console.error('Failed to load dimensions:', error)
+      setDimensions({})
+    }
+  }
+
   useEffect(() => {
     // Reset metadata to show loading state
     setMetadata(null)
     loadMetadata()
+    loadDimensions()
   }, [selectedWeek])
 
   const fileTypes = [
@@ -107,7 +123,10 @@ export default function Settings() {
             <h3 className="text-sm font-medium mb-3">Data Management</h3>
             <div className="flex items-center gap-4">
               <Button
-                onClick={refreshData}
+                onClick={async () => {
+                  await refreshData()
+                  loadDimensions()
+                }}
                 disabled={loading}
                 variant="outline"
                 className="flex items-center gap-2"
@@ -150,7 +169,10 @@ export default function Settings() {
                   fileTypeLabel={ft.label}
                   acceptedFormats={ft.formats}
                   currentWeek={selectedWeek}
-                  onUploadSuccess={() => loadMetadata(true)}
+                  onUploadSuccess={() => {
+                    loadMetadata(true)
+                    loadDimensions()
+                  }}
                 />
                 
                 {metadata === null ? (
@@ -169,6 +191,23 @@ export default function Settings() {
                 ) : (
                   <div className="text-sm text-gray-500 italic">
                     No file uploaded yet
+                  </div>
+                )}
+                
+                {/* Dimension validation status */}
+                {dimensions && dimensions[ft.type] && (
+                  <div className="flex items-center gap-2 text-sm">
+                    {dimensions[ft.type].has_country === true ? (
+                      <div className="flex items-center gap-1 text-green-600">
+                        <CheckCircle2 className="h-4 w-4" />
+                        <span>Country dimension detected</span>
+                      </div>
+                    ) : dimensions[ft.type].has_country === false ? (
+                      <div className="flex items-center gap-1 text-red-600">
+                        <XCircle className="h-4 w-4" />
+                        <span>Country dimension missing</span>
+                      </div>
+                    ) : null}
                   </div>
                 )}
               </div>

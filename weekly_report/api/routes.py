@@ -1253,6 +1253,107 @@ async def upload_file(
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 
+def validate_file_dimensions(file_path: Path, file_type: str) -> Dict[str, Any]:
+    """Validate that required columns/dimensions exist in the file."""
+    
+    result = {
+        "has_country": False,
+        "columns": []
+    }
+    
+    if not file_path.exists():
+        return result
+    
+    try:
+        if file_type in ["dema_spend", "dema_gm2"]:
+            # Try semicolon first, then comma
+            try:
+                df = pd.read_csv(file_path, sep=';', encoding='utf-8', nrows=1)
+            except:
+                df = pd.read_csv(file_path, sep=',', encoding='utf-8', nrows=1)
+            
+            result["columns"] = df.columns.tolist()
+            result["has_country"] = "Country" in df.columns or "country" in df.columns
+        
+        elif file_type == "shopify":
+            # Try to load the file
+            try:
+                df = pd.read_csv(file_path, sep=';', encoding='utf-8', nrows=1)
+            except:
+                df = pd.read_csv(file_path, sep=',', encoding='utf-8', nrows=1)
+            
+            result["columns"] = df.columns.tolist()
+            result["has_country"] = "Country" in df.columns or "country" in df.columns or "Session country" in df.columns
+        
+        elif file_type == "qlik":
+            # For Qlik, check if it's CSV or Excel
+            if file_path.suffix == '.csv':
+                try:
+                    df = pd.read_csv(file_path, sep=';', encoding='utf-8', nrows=1)
+                except:
+                    df = pd.read_csv(file_path, sep=',', encoding='utf-8', nrows=1)
+            else:
+                df = pd.read_excel(file_path, nrows=1)
+            
+            result["columns"] = df.columns.tolist()
+            result["has_country"] = "Country" in df.columns or "country" in df.columns
+    
+    except Exception as e:
+        logger.error(f"Error validating dimensions for {file_path}: {e}")
+    
+    return result
+
+
+@app.get("/api/file-dimensions")
+async def get_file_dimensions(week: str = Query(...)):
+    """Get validation status for required dimensions in data files."""
+    try:
+        if not validate_iso_week(week):
+            raise HTTPException(status_code=400, detail="Invalid ISO week format")
+        
+        config = load_config(week=week)
+        raw_path = config.raw_data_path
+        
+        result = {}
+        
+        # Check each file type
+        for file_type in ["qlik", "dema_spend", "dema_gm2", "shopify"]:
+            type_path = raw_path / file_type
+            if type_path.exists():
+                files = list(type_path.glob("*.*"))
+                # Filter out hidden files
+                files = [f for f in files if not f.name.startswith('.')]
+                
+                if files:
+                    # Get the most recently modified file
+                    latest_file = max(files, key=lambda f: f.stat().st_mtime)
+                    validation = validate_file_dimensions(latest_file, file_type)
+                    
+                    result[file_type] = {
+                        "filename": latest_file.name,
+                        "has_country": validation["has_country"],
+                        "columns": validation["columns"]
+                    }
+                else:
+                    result[file_type] = {
+                        "filename": None,
+                        "has_country": None,
+                        "columns": []
+                    }
+            else:
+                result[file_type] = {
+                    "filename": None,
+                    "has_country": None,
+                    "columns": []
+                }
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error validating file dimensions: {e}")
+        raise HTTPException(status_code=500, detail="Failed to validate file dimensions")
+
+
 @app.get("/api/file-metadata")
 async def get_file_metadata(week: str = Query(...)):
     """Get metadata for all data files in a specific week."""
