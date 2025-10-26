@@ -593,7 +593,30 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Only load if we don't have cached data already
     const cached = getCachedData(baseWeek)
-    if (!cached) {
+    if (cached) {
+      // Load from cache immediately to avoid any delay
+      setPeriods(cached.periods)
+      setMetrics(cached.metrics)
+      setMarkets(cached.markets)
+      setKpis(cached.kpis)
+      setContribution(cached.contribution)
+      setGender_sales(cached.gender_sales)
+      setMen_category_sales(cached.men_category_sales)
+      setWomen_category_sales(cached.women_category_sales)
+      setSessions_per_country(cached.sessions_per_country)
+      setConversion_per_country(cached.conversion_per_country)
+      setNew_customers_per_country(cached.new_customers_per_country)
+      setReturning_customers_per_country(cached.returning_customers_per_country)
+      setAov_new_customers_per_country(cached.aov_new_customers_per_country)
+      setAov_returning_customers_per_country(cached.aov_returning_customers_per_country)
+      setMarketing_spend_per_country(cached.marketing_spend_per_country)
+      setNcac_per_country(cached.ncac_per_country)
+      setContribution_new_per_country(cached.contribution_new_per_country)
+      setContribution_new_total_per_country(cached.contribution_new_total_per_country)
+      setContribution_returning_per_country(cached.contribution_returning_per_country)
+      setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
+      setTotal_contribution_per_country(cached.total_contribution_per_country)
+    } else {
       loadAllData(baseWeek)
     }
   }, [baseWeek]) // Removed loadAllData from deps to avoid re-loading when it changes
