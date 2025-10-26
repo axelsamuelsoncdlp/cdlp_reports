@@ -13,6 +13,36 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
   const isActive = (path: string) => pathname === path
 
+  const getPageTitle = () => {
+    const titles: Record<string, { title: string; subtitle: string }> = {
+      '/summary': { title: 'Summary', subtitle: 'Overview of weekly metrics' },
+      '/top-markets': { title: 'Top Markets', subtitle: 'Sales performance by country' },
+      '/online-kpis': { title: 'Online KPIs', subtitle: 'Key performance indicators for online sales' },
+      '/contribution': { title: 'Contribution', subtitle: 'New vs returning customer contribution' },
+      '/gender-sales': { title: 'Gender Sales', subtitle: 'Sales breakdown by gender' },
+      '/men-category-sales': { title: 'Men Category Sales', subtitle: 'Sales by men product categories' },
+      '/women-category-sales': { title: 'Women Category Sales', subtitle: 'Sales by women product categories' },
+      '/category-sales': { title: 'Category Sales', subtitle: 'Sales by category with YoY growth' },
+      '/products-new': { title: 'Products New', subtitle: 'Top products for new and returning customers' },
+      '/products-gender': { title: 'Products Gender', subtitle: 'Top products by gender' },
+      '/sessions-per-country': { title: 'Sessions per Country', subtitle: 'Website traffic by country' },
+      '/conversion-per-country': { title: 'Conversion per Country', subtitle: 'Conversion rates by country' },
+      '/new-customers-per-country': { title: 'New Customers per Country', subtitle: 'New customer acquisition by country' },
+      '/returning-customers-per-country': { title: 'Returning Customers per Country', subtitle: 'Returning customers by country' },
+      '/aov-new-customers-per-country': { title: 'AOV New Customers per Country', subtitle: 'Average order value for new customers by country' },
+      '/aov-returning-customers-per-country': { title: 'AOV Returning Customers per Country', subtitle: 'Average order value for returning customers by country' },
+      '/marketing-spend-per-country': { title: 'Marketing Spend per Country', subtitle: 'Marketing expenditure by country' },
+      '/ncac-per-country': { title: 'nCAC per Country', subtitle: 'New customer acquisition cost by country' },
+      '/contribution-new-per-country': { title: 'Contribution New Customer per Country', subtitle: 'Contribution per new customer by country' },
+      '/contribution-new-total-per-country': { title: 'Contribution New Total per Country', subtitle: 'Total contribution from new customers by country' },
+      '/settings': { title: 'Settings', subtitle: 'Configure data sources and file uploads' },
+    }
+    
+    return titles[pathname] || { title: 'Weekly Report', subtitle: 'Generate professional reports with data validation' }
+  }
+
+  const { title, subtitle } = getPageTitle()
+
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
@@ -326,8 +356,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       <div className="flex-1 flex flex-col">
         <header className="bg-white shadow-sm border-b">
           <div className="px-6 py-4">
-            <h1 className="text-2xl font-bold text-gray-900">Weekly Report Generator</h1>
-            <p className="text-gray-600 mt-1">Generate professional reports with data validation</p>
+            <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+            <p className="text-gray-600 mt-1">{subtitle}</p>
           </div>
         </header>
         <main className="flex-1 bg-gray-50 p-6">
