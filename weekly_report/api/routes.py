@@ -30,6 +30,7 @@ from weekly_report.src.metrics.returning_customers_per_country import calculate_
 from weekly_report.src.metrics.aov_new_customers_per_country import calculate_aov_new_customers_per_country_for_weeks
 from weekly_report.src.metrics.aov_returning_customers_per_country import calculate_aov_returning_customers_per_country_for_weeks
 from weekly_report.src.metrics.marketing_spend_per_country import calculate_marketing_spend_per_country_for_weeks
+from weekly_report.src.metrics.ncac_per_country import calculate_ncac_per_country_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -251,6 +252,17 @@ class MarketingSpendPerCountryData(BaseModel):
 
 class MarketingSpendPerCountryResponse(BaseModel):
     marketing_spend_per_country: List[MarketingSpendPerCountryData]
+    period_info: Dict[str, Any]
+
+
+class nCACPerCountryData(BaseModel):
+    week: str
+    countries: Dict[str, float]
+    last_year: Optional[Dict[str, Any]] = None
+
+
+class nCACPerCountryResponse(BaseModel):
+    ncac_per_country: List[nCACPerCountryData]
     period_info: Dict[str, Any]
 
 
@@ -1090,6 +1102,43 @@ async def get_marketing_spend_per_country(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Marketing Spend per Country metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/ncac-per-country", response_model=nCACPerCountryResponse)
+async def get_ncac_per_country(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get nCAC per country metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        ncac_data = calculate_ncac_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        
+        # Format response
+        response = nCACPerCountryResponse(
+            ncac_per_country=ncac_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting nCAC per country metrics for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 
