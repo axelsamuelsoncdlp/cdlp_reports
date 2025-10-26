@@ -557,6 +557,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
           timestamp: Date.now()
         })
       }
+      } // Close if (!batchMode) block
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       console.error('Error loading dashboard data:', err)
