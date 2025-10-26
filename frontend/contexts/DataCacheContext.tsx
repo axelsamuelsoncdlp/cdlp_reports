@@ -17,6 +17,7 @@ import {
   getAOVNewCustomersPerCountry,
   getAOVReturningCustomersPerCountry,
   getMarketingSpendPerCountry,
+  getNCACPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -31,11 +32,12 @@ import {
   type ReturningCustomersPerCountryResponse,
   type AOVNewCustomersPerCountryResponse,
   type AOVReturningCustomersPerCountryResponse,
-  type MarketingSpendPerCountryResponse
+  type MarketingSpendPerCountryResponse,
+  type nCACPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'returning_customers_per_country' | 'aov_new_customers_per_country' | 'aov_returning_customers_per_country' | 'marketing_spend_per_country' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'returning_customers_per_country' | 'aov_new_customers_per_country' | 'aov_returning_customers_per_country' | 'marketing_spend_per_country' | 'ncac_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -58,6 +60,7 @@ interface CacheData {
   aov_new_customers_per_country: AOVNewCustomersPerCountryResponse | null
   aov_returning_customers_per_country: AOVReturningCustomersPerCountryResponse | null
   marketing_spend_per_country: MarketingSpendPerCountryResponse | null
+  ncac_per_country: nCACPerCountryResponse | null
   timestamp: number
 }
 
@@ -77,6 +80,7 @@ interface DataCacheContextType {
   aov_new_customers_per_country: AOVNewCustomersPerCountryResponse | null
   aov_returning_customers_per_country: AOVReturningCustomersPerCountryResponse | null
   marketing_spend_per_country: MarketingSpendPerCountryResponse | null
+  ncac_per_country: nCACPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -108,6 +112,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [aov_new_customers_per_country, setAov_new_customers_per_country] = useState<AOVNewCustomersPerCountryResponse | null>(null)
   const [aov_returning_customers_per_country, setAov_returning_customers_per_country] = useState<AOVReturningCustomersPerCountryResponse | null>(null)
   const [marketing_spend_per_country, setMarketing_spend_per_country] = useState<MarketingSpendPerCountryResponse | null>(null)
+  const [ncac_per_country, setNcac_per_country] = useState<nCACPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -165,6 +170,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setAov_new_customers_per_country(cached.aov_new_customers_per_country)
         setAov_returning_customers_per_country(cached.aov_returning_customers_per_country)
         setMarketing_spend_per_country(cached.marketing_spend_per_country)
+        setNcac_per_country(cached.ncac_per_country)
         return
       }
     }
@@ -330,17 +336,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'marketing_spend_per_country', 
         stepNumber: 15, 
-        totalSteps: 15, 
+        totalSteps: 16, 
         message: 'Loading marketing spend per country...', 
-        percentage: 97 
+        percentage: 94 
       })
       const marketingSpendPerCountryData = await getMarketingSpendPerCountry(week, 8)
       setMarketing_spend_per_country(marketingSpendPerCountryData)
 
+      // Step 16: Load nCAC per Country
+      setLoadingProgress({ 
+        step: 'ncac_per_country', 
+        stepNumber: 16, 
+        totalSteps: 16, 
+        message: 'Loading nCAC per country...', 
+        percentage: 97 
+      })
+      const ncacPerCountryData = await getNCACPerCountry(week, 8)
+      setNcac_per_country(ncacPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 15, 
-        totalSteps: 15, 
+        stepNumber: 16, 
+        totalSteps: 16, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -362,6 +379,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         aov_new_customers_per_country: aovNewCustomersPerCountryData,
         aov_returning_customers_per_country: aovReturningCustomersPerCountryData,
         marketing_spend_per_country: marketingSpendPerCountryData,
+        ncac_per_country: ncacPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -416,6 +434,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     aov_new_customers_per_country,
     aov_returning_customers_per_country,
     marketing_spend_per_country,
+    ncac_per_country,
     loading,
     error,
     loadingProgress,
@@ -510,4 +529,9 @@ export function useAOVReturningCustomersPerCountry() {
 export function useMarketingSpendPerCountry() {
   const { marketing_spend_per_country } = useDataCache()
   return { marketing_spend_per_country }
+}
+
+export function useNCACPerCountry() {
+  const { ncac_per_country } = useDataCache()
+  return { ncac_per_country }
 }
