@@ -35,8 +35,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/ncac-per-country': { title: 'nCAC per Country', subtitle: 'New customer acquisition cost by country' },
       '/contribution-new-per-country': { title: 'Contribution New Customer per Country', subtitle: '(SEK)' },
       '/contribution-new-total-per-country': { title: 'Contribution New Total per Country', subtitle: '(SEK \'000)' },
-      '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: 'Contribution per returning customer by country' },
-      '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: 'Total contribution from returning customers by country' },
+      '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: '(SEK)' },
+      '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: '(SEK \'000)' },
       '/total-contribution-per-country': { title: 'Total Contribution per Country', subtitle: 'Total contribution for all customers by country' },
       '/settings': { title: 'Settings', subtitle: 'Configure data sources and file uploads' },
     }
