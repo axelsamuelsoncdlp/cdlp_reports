@@ -591,8 +591,12 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
 
   // Load data on mount and when baseWeek changes
   useEffect(() => {
-    loadAllData(baseWeek)
-  }, [loadAllData, baseWeek])
+    // Only load if we don't have cached data already
+    const cached = getCachedData(baseWeek)
+    if (!cached) {
+      loadAllData(baseWeek)
+    }
+  }, [baseWeek]) // Removed loadAllData from deps to avoid re-loading when it changes
 
   const value: DataCacheContextType = {
     periods,

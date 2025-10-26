@@ -85,10 +85,33 @@ export default function Settings() {
   }
 
   useEffect(() => {
-    // Reset metadata to show loading state
-    setMetadata(null)
-    loadMetadata()
-    loadDimensions()
+    // Only load metadata if not already loaded for this week
+    const cacheKey = `file_metadata_${selectedWeek}`
+    const cached = localStorage.getItem(cacheKey)
+    
+    if (!cached) {
+      // Reset metadata to show loading state
+      setMetadata(null)
+      loadMetadata()
+      loadDimensions()
+    } else {
+      try {
+        const parsed = JSON.parse(cached)
+        const cacheAge = Date.now() - parsed.timestamp
+        // Cache for 5 minutes
+        if (cacheAge < 5 * 60 * 1000) {
+          setMetadata(parsed.data)
+        } else {
+          setMetadata(null)
+          loadMetadata()
+          loadDimensions()
+        }
+      } catch (err) {
+        console.warn('Failed to load cached metadata:', err)
+        loadMetadata()
+        loadDimensions()
+      }
+    }
   }, [selectedWeek])
 
   const fileTypes = [
