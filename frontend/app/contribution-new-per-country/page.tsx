@@ -34,8 +34,8 @@ export default function ContributionNewPerCountry() {
         <div className="flex items-center gap-3 mb-6">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Loading Contribution per New Customer per Country</h2>
-            <p className="text-sm text-gray-600">Processing contribution data by country...</p>
+            <h2 className="text-lg font-semibold text-gray-900">Loading New Customer Contribution per Country</h2>
+            <p className="text-sm text-gray-600">Processing total contribution data by country...</p>
           </div>
         </div>
         

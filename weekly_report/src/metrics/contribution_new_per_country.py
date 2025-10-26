@@ -110,15 +110,10 @@ def calculate_contribution_new_per_country_for_week(
     # Calculate Contribution = GM2 - Marketing spend (for new customers)
     merged_df['contribution'] = merged_df['gm2_sek'] - merged_df['New customer spend']
     
-    # Calculate Contribution per New Customer = Contribution / New Customers
-    merged_df['contribution_per_customer'] = merged_df.apply(
-        lambda row: row['contribution'] / row['new_customers'] if row['new_customers'] > 0 else 0,
-        axis=1
-    )
-    
+    # Calculate Contribution (total, not per customer)
     # Debug logging
     logger.info(f"Week {week_str}: Merged data shape: {merged_df.shape}")
-    logger.info(f"Week {week_str}: Sample countries: {merged_df[['Country', 'gross_revenue', 'gm2_pct', 'new_customers', 'contribution_per_customer']].head().to_dict()}")
+    logger.info(f"Week {week_str}: Sample countries: {merged_df[['Country', 'gross_revenue', 'gm2_pct', 'new_customers', 'contribution']].head().to_dict()}")
     
     # Create result dict
     result = {
@@ -126,24 +121,20 @@ def calculate_contribution_new_per_country_for_week(
         'countries': {}
     }
     
-    # Add each country's contribution per new customer
+    # Add each country's total contribution (not per customer)
     for _, row in merged_df.iterrows():
         country = row['Country']
         if pd.notna(country) and country != '-':
-            result['countries'][country] = float(row['contribution_per_customer'])
+            result['countries'][country] = float(row['contribution'])
     
-    # Calculate Total Contribution per New Customer
+    # Calculate Total Contribution (not per customer)
     total_gm2_sek = merged_df['gm2_sek'].sum()
     total_marketing_spend = merged_df['New customer spend'].sum()
     total_contribution = total_gm2_sek - total_marketing_spend
     total_new_customers = merged_df['new_customers'].sum()
     
-    if total_new_customers > 0:
-        total_contribution_per_customer = total_contribution / total_new_customers
-    else:
-        total_contribution_per_customer = 0
-    
-    result['countries']['Total'] = float(total_contribution_per_customer)
+    # Store total contribution (not per customer)
+    result['countries']['Total'] = float(total_contribution)
     
     # Calculate ROW (Rest of World) - aggregate of smaller countries
     # Main countries to exclude
@@ -161,12 +152,8 @@ def calculate_contribution_new_per_country_for_week(
     
     logger.info(f"Week {week_str} Contribution: ROW gm2_sek: {row_gm2_sek}, marketing: {row_marketing_spend}, customers: {row_customers}")
     
-    if row_customers > 0:
-        row_contribution_per_customer = row_contribution / row_customers
-    else:
-        row_contribution_per_customer = 0
-    
-    result['countries']['ROW'] = float(row_contribution_per_customer)
+    # Store total contribution for ROW (not per customer)
+    result['countries']['ROW'] = float(row_contribution)
     
     return result
 
