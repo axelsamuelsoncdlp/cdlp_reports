@@ -90,5 +90,6 @@ def load_csv_files(source_path: Path, source_name: str) -> pd.DataFrame:
 
 def load_data(raw_data_path: Path) -> pd.DataFrame:
     """Load Qlik data from CSV/Excel files."""
+    # Use qlik directory directly (not week-specific)
     source_path = raw_data_path / "qlik"
     return load_csv_files(source_path, "qlik")
