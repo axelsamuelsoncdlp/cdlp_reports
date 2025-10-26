@@ -25,7 +25,7 @@ export default function SessionsPerCountry() {
 
   const formatValue = (value: number): string => {
     if (value === 0) return '0'
-    return Math.round(value).toLocaleString('sv-SE')
+    return (value / 1000).toFixed(1)
   }
 
   if (!sessions_per_country) {
