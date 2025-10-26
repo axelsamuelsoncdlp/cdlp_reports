@@ -124,33 +124,6 @@ export default function MetricsPreview({
 
   return (
     <div className="space-y-4">
-      {/* Header with period dates */}
-      <div className="bg-yellow-100 border border-yellow-200 rounded-lg p-4">
-        <div className="flex justify-between items-center">
-          <div className="text-sm font-medium text-yellow-800">
-            {getPeriodDateRange('actual')}
-          </div>
-          <div className="flex items-center gap-2">
-            {/* Cache status indicator */}
-            <div className="text-xs text-yellow-700">
-              Data loaded from cache
-            </div>
-            <button
-              onClick={() => refreshData()}
-              className="px-3 py-1 text-xs bg-yellow-200 hover:bg-yellow-300 text-yellow-800 rounded-md"
-            >
-              Refresh Data
-            </button>
-            <button
-              onClick={() => clearCache()}
-              className="px-3 py-1 text-xs bg-red-200 hover:bg-red-300 text-red-800 rounded-md"
-            >
-              Clear Cache
-            </button>
-          </div>
-        </div>
-      </div>
-
       {/* Metrics table */}
       <div className="bg-gray-50 rounded-lg overflow-hidden overflow-x-auto">
         <table className="w-full text-xs">
