@@ -175,7 +175,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 <button
                   onClick={() => setIsMarketingOpen(!isMarketingOpen)}
                   className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive('/sessions-per-country')
+                    isActive('/sessions-per-country') || isActive('/conversion-per-country')
                       ? 'bg-gray-200 text-gray-900'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
@@ -201,6 +201,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     >
                       <IconChartBar className="h-4 w-4" />
                       Sessions per Country
+                    </Link>
+                    <Link
+                      href="/conversion-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/conversion-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Conversion per Country
                     </Link>
                   </div>
                 )}

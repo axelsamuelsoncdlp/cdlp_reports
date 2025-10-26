@@ -134,6 +134,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setMen_category_sales(cached.men_category_sales)
         setWomen_category_sales(cached.women_category_sales)
         setSessions_per_country(cached.sessions_per_country)
+        setConversion_per_country(cached.conversion_per_country)
         return
       }
     }
@@ -233,17 +234,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'sessions_per_country', 
         stepNumber: 9, 
-        totalSteps: 9, 
+        totalSteps: 10, 
         message: 'Loading sessions per country...', 
-        percentage: 94 
+        percentage: 90 
       })
       const sessionsPerCountryData = await getSessionsPerCountry(week, 8)
       setSessions_per_country(sessionsPerCountryData)
 
+      // Step 10: Load Conversion per Country
+      setLoadingProgress({ 
+        step: 'conversion_per_country', 
+        stepNumber: 10, 
+        totalSteps: 10, 
+        message: 'Loading conversion per country...', 
+        percentage: 95 
+      })
+      const conversionPerCountryData = await getConversionPerCountry(week, 8)
+      setConversion_per_country(conversionPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 9, 
-        totalSteps: 9, 
+        stepNumber: 10, 
+        totalSteps: 10, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -259,6 +271,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         men_category_sales: menCategorySalesData,
         women_category_sales: womenCategorySalesData,
         sessions_per_country: sessionsPerCountryData,
+        conversion_per_country: conversionPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -307,6 +320,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     men_category_sales,
     women_category_sales,
     sessions_per_country,
+    conversion_per_country,
     loading,
     error,
     loadingProgress,
@@ -371,4 +385,9 @@ export function useWomenCategorySales() {
 export function useSessionsPerCountry() {
   const { sessions_per_country } = useDataCache()
   return { sessions_per_country }
+}
+
+export function useConversionPerCountry() {
+  const { conversion_per_country } = useDataCache()
+  return { conversion_per_country }
 }
