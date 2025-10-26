@@ -121,12 +121,17 @@ def calculate_contribution_new_per_country_for_week(
     # Main countries to exclude
     main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
     
-    row_df = merged_df[~merged_df['Country'].isin(main_countries)]
+    row_df = merged_df[~merged_df['Country'].isin(main_countries) & (merged_df['Country'] != 'Total') & (merged_df['Country'] != 'ROW')]
+    
+    logger.info(f"Week {week_str} Contribution: All countries: {merged_df['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str} Contribution: ROW countries: {row_df['Country'].unique().tolist()}")
     
     row_gm2_sek = row_df['gm2_sek'].sum()
     row_marketing_spend = row_df['New customer spend'].sum()
     row_contribution = row_gm2_sek - row_marketing_spend
     row_customers = row_df['new_customers'].sum()
+    
+    logger.info(f"Week {week_str} Contribution: ROW gm2_sek: {row_gm2_sek}, marketing: {row_marketing_spend}, customers: {row_customers}")
     
     if row_customers > 0:
         row_contribution_per_customer = row_contribution / row_customers

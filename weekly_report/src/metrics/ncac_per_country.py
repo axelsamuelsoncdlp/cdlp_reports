@@ -77,8 +77,14 @@ def calculate_ncac_per_country_for_week(
     # Main countries to exclude
     main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
     
-    row_marketing_spend = merged_df[~merged_df['Country'].isin(main_countries)]['New customer spend'].sum()
-    row_customers = merged_df[~merged_df['Country'].isin(main_countries)]['new_customers'].sum()
+    row_df = merged_df[~merged_df['Country'].isin(main_countries) & (merged_df['Country'] != 'Total') & (merged_df['Country'] != 'ROW')]
+    
+    logger.info(f"Week {week_str}: All countries in data: {merged_df['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str}: ROW countries: {row_df['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str}: ROW marketing spend: {row_df['New customer spend'].sum()}, ROW customers: {row_df['new_customers'].sum()}")
+    
+    row_marketing_spend = row_df['New customer spend'].sum()
+    row_customers = row_df['new_customers'].sum()
     
     if row_customers > 0:
         row_ncac = row_marketing_spend / row_customers
