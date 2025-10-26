@@ -587,6 +587,41 @@ export async function getTotalContributionPerCountry(baseWeek: string, numWeeks:
   return response.json()
 }
 
+export interface BatchMetricsResponse {
+  periods: PeriodsResponse
+  metrics: MetricsResponse
+  markets: MarketsResponse
+  kpis: OnlineKPIsResponse
+  contribution: ContributionResponse
+  gender_sales: GenderSalesResponse
+  men_category_sales: MenCategorySalesResponse
+  women_category_sales: WomenCategorySalesResponse
+  category_sales: any
+  products_new: any
+  products_gender: any
+  sessions_per_country: SessionsPerCountryResponse
+  conversion_per_country: ConversionPerCountryResponse
+  new_customers_per_country: NewCustomersPerCountryResponse
+  returning_customers_per_country: ReturningCustomersPerCountryResponse
+  aov_new_customers_per_country: AOVNewCustomersPerCountryResponse
+  aov_returning_customers_per_country: AOVReturningCustomersPerCountryResponse
+  marketing_spend_per_country: MarketingSpendPerCountryResponse
+  ncac_per_country: nCACPerCountryResponse
+  contribution_new_per_country: ContributionNewPerCountryResponse
+  contribution_new_total_per_country: ContributionNewTotalPerCountryResponse
+  contribution_returning_per_country: ContributionReturningPerCountryResponse
+  contribution_returning_total_per_country: ContributionReturningTotalPerCountryResponse
+  total_contribution_per_country: TotalContributionPerCountryResponse
+}
+
+export async function getBatchMetrics(baseWeek: string, numWeeks: number = 8): Promise<BatchMetricsResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/batch/all-metrics?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch batch metrics: ${response.statusText}`)
+  }
+  return response.json()
+}
+
 export async function generatePDF(baseWeek: string, periods: string[]): Promise<GeneratePDFResponse> {
   const response = await fetch(`${API_BASE_URL}/api/generate/pdf`, {
     method: 'POST',

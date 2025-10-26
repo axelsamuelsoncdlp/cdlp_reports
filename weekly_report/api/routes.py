@@ -37,8 +37,9 @@ from weekly_report.src.metrics.contribution_new_total_per_country import calcula
 from weekly_report.src.metrics.contribution_returning_per_country import calculate_contribution_returning_per_country_for_weeks
 from weekly_report.src.metrics.contribution_returning_total_per_country import calculate_contribution_returning_total_per_country_for_weeks
 from weekly_report.src.metrics.total_contribution_per_country import calculate_total_contribution_per_country_for_weeks
+from weekly_report.src.metrics.batch_calculator import calculate_all_metrics
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
-from weekly_report.src.cache.manager import metrics_cache
+from weekly_report.src.cache.manager import metrics_cache, raw_data_cache
 from weekly_report.src.config import load_config
 from weekly_report.src.utils.file_metadata import extract_file_metadata
 
@@ -301,6 +302,34 @@ class ContributionReturningTotalPerCountryResponse(BaseModel):
 class TotalContributionPerCountryResponse(BaseModel):
     total_contribution_per_country: List[ContributionNewPerCountryData]  # Same data structure
     period_info: Dict[str, Any]
+
+
+class BatchMetricsResponse(BaseModel):
+    """Unified response containing all metrics calculated in a single batch."""
+    periods: Dict[str, Any]
+    metrics: Dict[str, Any]
+    markets: List[Any]
+    kpis: List[Any]
+    contribution: List[Any]
+    gender_sales: List[Any]
+    men_category_sales: List[Any]
+    women_category_sales: List[Any]
+    category_sales: Dict[str, Any]
+    products_new: Dict[str, Any]
+    products_gender: Dict[str, Any]
+    sessions_per_country: List[Any]
+    conversion_per_country: List[Any]
+    new_customers_per_country: List[Any]
+    returning_customers_per_country: List[Any]
+    aov_new_customers_per_country: List[Any]
+    aov_returning_customers_per_country: List[Any]
+    marketing_spend_per_country: List[Any]
+    ncac_per_country: List[Any]
+    contribution_new_per_country: List[Any]
+    contribution_new_total_per_country: List[Any]
+    contribution_returning_per_country: List[Any]
+    contribution_returning_total_per_country: List[Any]
+    total_contribution_per_country: List[Any]
 
 
 # Initialize FastAPI app
@@ -1365,6 +1394,37 @@ async def get_total_contribution_per_country(
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
+@app.get("/api/batch/all-metrics")
+async def get_batch_all_metrics(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get all metrics in a single batch request for optimal performance."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        
+        logger.info(f"Starting batch calculation for {base_week} with {num_weeks} weeks")
+        all_metrics = calculate_all_metrics(base_week, config.raw_data_path, num_weeks)
+        
+        response = BatchMetricsResponse(**all_metrics)
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting batch all metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @app.post("/api/upload-file")
 async def upload_file(
     file: UploadFile = File(...),
@@ -1409,6 +1469,10 @@ async def upload_file(
             shutil.copyfileobj(file.file, buffer)
         
         logger.info(f"File uploaded: {target_path}")
+        
+        # Clear caches to ensure fresh data after upload
+        raw_data_cache.clear()
+        logger.info("Cleared raw data cache after file upload")
         
         # Extract metadata (date range)
         metadata = extract_file_metadata(target_path, file_type)

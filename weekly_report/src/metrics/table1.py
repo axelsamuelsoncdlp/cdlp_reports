@@ -217,10 +217,48 @@ def load_all_raw_data(data_path: Path) -> Dict[str, pd.DataFrame]:
         logger.warning(f"Shopify data not found: {e}")
         data_sources['shopify'] = pd.DataFrame()
     
+    # Pre-calculate ISO weeks for all dataframes to optimize repeated access
+    # This avoids repeated datetime calculations in each metric function
+    logger.info("Pre-calculating ISO weeks for all dataframes...")
+    
+    # Add ISO week to Qlik data if Date column exists
+    if not data_sources['qlik'].empty and 'Date' in data_sources['qlik'].columns:
+        data_sources['qlik']['Date'] = pd.to_datetime(data_sources['qlik']['Date'], errors='coerce')
+        iso_cal = data_sources['qlik']['Date'].dt.isocalendar()
+        data_sources['qlik']['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+        logger.info("Added iso_week column to Qlik data")
+    
+    # Add ISO week to Dema spend data if Days column exists
+    if not data_sources['dema_spend'].empty and 'Days' in data_sources['dema_spend'].columns:
+        data_sources['dema_spend']['Days'] = pd.to_datetime(data_sources['dema_spend']['Days'], errors='coerce')
+        iso_cal = data_sources['dema_spend']['Days'].dt.isocalendar()
+        data_sources['dema_spend']['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+        logger.info("Added iso_week column to Dema spend data")
+    
+    # Add ISO week to Dema GM2 data if Days column exists
+    if not data_sources['dema_gm2'].empty and 'Days' in data_sources['dema_gm2'].columns:
+        data_sources['dema_gm2']['Days'] = pd.to_datetime(data_sources['dema_gm2']['Days'], errors='coerce')
+        iso_cal = data_sources['dema_gm2']['Days'].dt.isocalendar()
+        data_sources['dema_gm2']['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+        logger.info("Added iso_week column to Dema GM2 data")
+    
+    # Add ISO week to Shopify data if Day column exists
+    if not data_sources['shopify'].empty:
+        if 'Day' in data_sources['shopify'].columns:
+            data_sources['shopify']['Day'] = pd.to_datetime(data_sources['shopify']['Day'], errors='coerce')
+            iso_cal = data_sources['shopify']['Day'].dt.isocalendar()
+            data_sources['shopify']['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+            logger.info("Added iso_week column to Shopify data")
+        elif 'Date' in data_sources['shopify'].columns:
+            data_sources['shopify']['Date'] = pd.to_datetime(data_sources['shopify']['Date'], errors='coerce')
+            iso_cal = data_sources['shopify']['Date'].dt.isocalendar()
+            data_sources['shopify']['iso_week'] = iso_cal['year'].astype(str) + '-' + iso_cal['week'].astype(str).str.zfill(2)
+            logger.info("Added iso_week column to Shopify data")
+    
     # Cache the loaded data
     raw_data_cache.set(data_path_str, data_sources)
     
-    logger.info(f"Successfully loaded and cached all raw data sources")
+    logger.info(f"Successfully loaded and cached all raw data sources with pre-calculated ISO weeks")
     return data_sources
 
 

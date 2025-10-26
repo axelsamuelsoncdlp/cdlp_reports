@@ -23,6 +23,7 @@ import {
   getContributionReturningPerCountry,
   getContributionReturningTotalPerCountry,
   getTotalContributionPerCountry,
+  getBatchMetrics,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -43,7 +44,8 @@ import {
   type ContributionNewTotalPerCountryResponse,
   type ContributionReturningPerCountryResponse,
   type ContributionReturningTotalPerCountryResponse,
-  type TotalContributionPerCountryResponse
+  type TotalContributionPerCountryResponse,
+  type BatchMetricsResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
@@ -208,11 +210,92 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     setLoading(true)
 
     try {
+      // Try to load all data via batch endpoint first (fallback to individual calls)
+      setLoadingProgress({ 
+        step: 'metrics', 
+        stepNumber: 1, 
+        totalSteps: 21, 
+        message: 'Loading all metrics in batch...', 
+        percentage: 5 
+      })
+      
+      let batchMode = false
+      try {
+        // Try batch endpoint
+        const batchData = await getBatchMetrics(week, 8)
+        batchMode = true
+        
+        // Set all data from batch response
+        setPeriods(batchData.periods)
+        setMetrics(batchData.metrics)
+        setMarkets(batchData.markets)
+        setKpis(batchData.kpis)
+        setContribution(batchData.contribution)
+        setGender_sales(batchData.gender_sales)
+        setMen_category_sales(batchData.men_category_sales)
+        setWomen_category_sales(batchData.women_category_sales)
+        setSessions_per_country(batchData.sessions_per_country)
+        setConversion_per_country(batchData.conversion_per_country)
+        setNew_customers_per_country(batchData.new_customers_per_country)
+        setReturning_customers_per_country(batchData.returning_customers_per_country)
+        setAov_new_customers_per_country(batchData.aov_new_customers_per_country)
+        setAov_returning_customers_per_country(batchData.aov_returning_customers_per_country)
+        setMarketing_spend_per_country(batchData.marketing_spend_per_country)
+        setNcac_per_country(batchData.ncac_per_country)
+        setContribution_new_per_country(batchData.contribution_new_per_country)
+        setContribution_new_total_per_country(batchData.contribution_new_total_per_country)
+        setContribution_returning_per_country(batchData.contribution_returning_per_country)
+        setContribution_returning_total_per_country(batchData.contribution_returning_total_per_country)
+        setTotal_contribution_per_country(batchData.total_contribution_per_country)
+        
+        setLoadingProgress({ 
+          step: 'complete', 
+          stepNumber: 21, 
+          totalSteps: 21, 
+          message: 'Complete!', 
+          percentage: 100 
+        })
+        
+        // Save to cache
+        saveCache(week, {
+          periods: batchData.periods,
+          metrics: batchData.metrics,
+          markets: batchData.markets,
+          kpis: batchData.kpis,
+          contribution: batchData.contribution,
+          gender_sales: batchData.gender_sales,
+          men_category_sales: batchData.men_category_sales,
+          women_category_sales: batchData.women_category_sales,
+          sessions_per_country: batchData.sessions_per_country,
+          conversion_per_country: batchData.conversion_per_country,
+          new_customers_per_country: batchData.new_customers_per_country,
+          returning_customers_per_country: batchData.returning_customers_per_country,
+          aov_new_customers_per_country: batchData.aov_new_customers_per_country,
+          aov_returning_customers_per_country: batchData.aov_returning_customers_per_country,
+          marketing_spend_per_country: batchData.marketing_spend_per_country,
+          ncac_per_country: batchData.ncac_per_country,
+          contribution_new_per_country: batchData.contribution_new_per_country,
+          contribution_new_total_per_country: batchData.contribution_new_total_per_country,
+          contribution_returning_per_country: batchData.contribution_returning_per_country,
+          contribution_returning_total_per_country: batchData.contribution_returning_total_per_country,
+          total_contribution_per_country: batchData.total_contribution_per_country,
+          timestamp: Date.now()
+        })
+        
+        setLoading(false)
+        return
+      } catch (batchError) {
+        console.warn('Batch endpoint failed, falling back to individual calls:', batchError)
+        // Fall through to individual calls
+      }
+      
+      // Individual calls (fallback or primary if batch disabled)
+      if (!batchMode) {
       // Step 1: Load periods
       setLoadingProgress({ 
         step: 'periods', 
         stepNumber: 1, 
-        totalSteps: 8, 
+        totalSteps: 21, 
         message: 'Loading periods...', 
         percentage: 0 
       })
@@ -447,31 +530,33 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         percentage: 100 
       })
 
-      // Save to cache
-      saveCache(week, {
-        periods: periodsData,
-        metrics: metricsData,
-        markets: marketsData,
-        kpis: kpisData,
-        contribution: contributionData,
-        gender_sales: genderSalesData,
-        men_category_sales: menCategorySalesData,
-        women_category_sales: womenCategorySalesData,
-        sessions_per_country: sessionsPerCountryData,
-        conversion_per_country: conversionPerCountryData,
-        new_customers_per_country: newCustomersPerCountryData,
-        returning_customers_per_country: returningCustomersPerCountryData,
-        aov_new_customers_per_country: aovNewCustomersPerCountryData,
-        aov_returning_customers_per_country: aovReturningCustomersPerCountryData,
-        marketing_spend_per_country: marketingSpendPerCountryData,
-        ncac_per_country: ncacPerCountryData,
-        contribution_new_per_country: contributionNewPerCountryData,
-        contribution_new_total_per_country: contributionNewTotalPerCountryData,
-        contribution_returning_per_country: contributionReturningPerCountryData,
-        contribution_returning_total_per_country: contributionReturningTotalPerCountryData,
-        total_contribution_per_country: totalContributionPerCountryData,
-        timestamp: Date.now()
-      })
+      // Save to cache (individual calls mode)
+      if (!batchMode) {
+        saveCache(week, {
+          periods: periodsData,
+          metrics: metricsData,
+          markets: marketsData,
+          kpis: kpisData,
+          contribution: contributionData,
+          gender_sales: genderSalesData,
+          men_category_sales: menCategorySalesData,
+          women_category_sales: womenCategorySalesData,
+          sessions_per_country: sessionsPerCountryData,
+          conversion_per_country: conversionPerCountryData,
+          new_customers_per_country: newCustomersPerCountryData,
+          returning_customers_per_country: returningCustomersPerCountryData,
+          aov_new_customers_per_country: aovNewCustomersPerCountryData,
+          aov_returning_customers_per_country: aovReturningCustomersPerCountryData,
+          marketing_spend_per_country: marketingSpendPerCountryData,
+          ncac_per_country: ncacPerCountryData,
+          contribution_new_per_country: contributionNewPerCountryData,
+          contribution_new_total_per_country: contributionNewTotalPerCountryData,
+          contribution_returning_per_country: contributionReturningPerCountryData,
+          contribution_returning_total_per_country: contributionReturningTotalPerCountryData,
+          total_contribution_per_country: totalContributionPerCountryData,
+          timestamp: Date.now()
+        })
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load dashboard data')
       console.error('Error loading dashboard data:', err)
