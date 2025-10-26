@@ -37,7 +37,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/contribution-new-total-per-country': { title: 'Contribution New Total per Country', subtitle: '(SEK \'000)' },
       '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: '(SEK)' },
       '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: '(SEK \'000)' },
-      '/total-contribution-per-country': { title: 'Total Contribution per Country', subtitle: 'Total contribution for all customers by country' },
+      '/total-contribution-per-country': { title: 'Total Contribution per Country', subtitle: '(SEK \'000)' },
       '/settings': { title: 'Settings', subtitle: 'Configure data sources and file uploads' },
     }
     

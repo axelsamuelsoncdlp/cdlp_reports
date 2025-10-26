@@ -25,7 +25,7 @@ export default function TotalContributionPerCountry() {
 
   const formatValue = (value: number): string => {
     if (value === 0) return '0'
-    return Math.round(value / 1000).toString() + 'k'
+    return Math.round(value / 1000).toString()
   }
 
   if (!total_contribution_per_country) {
