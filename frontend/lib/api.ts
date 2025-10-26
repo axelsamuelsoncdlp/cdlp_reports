@@ -418,6 +418,23 @@ export interface nCACPerCountryResponse {
   }
 }
 
+export interface ContributionNewPerCountryData {
+  week: string
+  countries: Record<string, number>
+  last_year?: {
+    week: string
+    countries: Record<string, number>
+  } | null
+}
+
+export interface ContributionNewPerCountryResponse {
+  contribution_new_per_country: ContributionNewPerCountryData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20, customerType: 'new' | 'returning' = 'new'): Promise<TopProductsResponse> {
   const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}&customer_type=${customerType}`)
   if (!response.ok) {
@@ -494,6 +511,14 @@ export async function getNCACPerCountry(baseWeek: string, numWeeks: number = 8):
   const response = await fetch(`${API_BASE_URL}/api/ncac-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch nCAC per Country data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getContributionNewPerCountry(baseWeek: string, numWeeks: number = 8): Promise<ContributionNewPerCountryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/contribution-new-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Contribution New per Country data: ${response.statusText}`)
   }
   return response.json()
 }
