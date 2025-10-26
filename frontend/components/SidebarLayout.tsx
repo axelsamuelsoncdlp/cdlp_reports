@@ -91,6 +91,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   <div className="ml-4 mt-1 space-y-1">
                     <Link
                       href="/summary"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/summary')
                           ? 'bg-gray-200 text-gray-900'
@@ -102,6 +103,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/top-markets"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/top-markets')
                           ? 'bg-gray-200 text-gray-900'
@@ -113,6 +115,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/online-kpis"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/online-kpis')
                           ? 'bg-gray-200 text-gray-900'
@@ -124,6 +127,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/contribution"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/contribution')
                           ? 'bg-gray-200 text-gray-900'
@@ -135,6 +139,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/gender-sales"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/gender-sales')
                           ? 'bg-gray-200 text-gray-900'
@@ -146,6 +151,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/men-category-sales"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/men-category-sales')
                           ? 'bg-gray-200 text-gray-900'
@@ -157,6 +163,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/women-category-sales"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/women-category-sales')
                           ? 'bg-gray-200 text-gray-900'
@@ -168,6 +175,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/category-sales"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/category-sales')
                           ? 'bg-gray-200 text-gray-900'
@@ -179,6 +187,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/products-new"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/products-new')
                           ? 'bg-gray-200 text-gray-900'
@@ -190,6 +199,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/products-gender"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/products-gender')
                           ? 'bg-gray-200 text-gray-900'
@@ -226,6 +236,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   <div className="ml-4 mt-1 space-y-1">
                     <Link
                       href="/sessions-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/sessions-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -237,6 +248,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/conversion-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/conversion-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -248,6 +260,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/new-customers-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/new-customers-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -259,6 +272,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/returning-customers-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/returning-customers-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -270,6 +284,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/aov-new-customers-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/aov-new-customers-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -281,6 +296,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/aov-returning-customers-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/aov-returning-customers-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -292,6 +308,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/marketing-spend-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/marketing-spend-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -303,6 +320,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/ncac-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/ncac-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -314,6 +332,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/contribution-new-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/contribution-new-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -325,6 +344,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/contribution-new-total-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/contribution-new-total-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -336,6 +356,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/contribution-returning-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/contribution-returning-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -347,6 +368,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/contribution-returning-total-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/contribution-returning-total-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -358,6 +380,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                     <Link
                       href="/total-contribution-per-country"
+                      prefetch={true}
                       className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive('/total-contribution-per-country')
                           ? 'bg-gray-200 text-gray-900'
@@ -374,6 +397,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
               {/* Settings */}
               <Link
                 href="/settings"
+                prefetch={true}
                 className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
                   isActive('/settings')
                     ? 'bg-gray-200 text-gray-900'
