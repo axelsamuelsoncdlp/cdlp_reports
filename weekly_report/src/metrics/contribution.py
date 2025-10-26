@@ -155,11 +155,20 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
             new_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
             returning_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'Returning']
             
-            gm2_pct_new = new_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
-            gm2_pct_returning = returning_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
+            # If country column exists, just take the mean across all countries (aggregate)
+            if 'Country' in dema_gm2_df.columns:
+                gm2_pct_new = new_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
+                gm2_pct_returning = returning_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
+            else:
+                gm2_pct_new = new_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
+                gm2_pct_returning = returning_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
         else:
             # Old format - allocate proportionally based on gross revenue
-            gm2_pct_total = dema_gm2_df['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
+            # If country column exists, aggregate it
+            if 'Country' in dema_gm2_df.columns:
+                gm2_pct_total = dema_gm2_df['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
+            else:
+                gm2_pct_total = dema_gm2_df['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in dema_gm2_df.columns else 0
             gm2_pct_new = gm2_pct_total
             gm2_pct_returning = gm2_pct_total
     
