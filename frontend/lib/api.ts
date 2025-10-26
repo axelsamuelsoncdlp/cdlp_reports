@@ -459,6 +459,14 @@ export interface ContributionReturningTotalPerCountryResponse {
   }
 }
 
+export interface TotalContributionPerCountryResponse {
+  total_contribution_per_country: ContributionNewPerCountryData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20, customerType: 'new' | 'returning' = 'new'): Promise<TopProductsResponse> {
   const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}&customer_type=${customerType}`)
   if (!response.ok) {
@@ -567,6 +575,14 @@ export async function getContributionReturningTotalPerCountry(baseWeek: string, 
   const response = await fetch(`${API_BASE_URL}/api/contribution-returning-total-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Contribution Returning Total per Country data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getTotalContributionPerCountry(baseWeek: string, numWeeks: number = 8): Promise<TotalContributionPerCountryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/total-contribution-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Total Contribution per Country data: ${response.statusText}`)
   }
   return response.json()
 }
