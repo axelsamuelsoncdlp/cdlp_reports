@@ -149,14 +149,20 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
     gm2_pct_total = 0
     
     if not dema_gm2_df.empty:
+        logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
+        logger.info(f"Week {week_str}: GM2 rows: {len(dema_gm2_df)}")
+        
         # Check if we have customer type split
         if 'New vs Returning Customer' in dema_gm2_df.columns:
             # New format with customer type split
             new_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'New']
             returning_rows = dema_gm2_df[dema_gm2_df['New vs Returning Customer'] == 'Returning']
             
+            logger.info(f"Week {week_str}: New rows: {len(new_rows)}, Returning rows: {len(returning_rows)}")
+            
             # If country column exists, just take the mean across all countries (aggregate)
             if 'Country' in dema_gm2_df.columns:
+                logger.info(f"Week {week_str}: GM2 has country dimension")
                 gm2_pct_new = new_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_rows.columns else 0
                 gm2_pct_returning = returning_rows['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in returning_rows.columns else 0
             else:
@@ -172,10 +178,15 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
             gm2_pct_new = gm2_pct_total
             gm2_pct_returning = gm2_pct_total
     
+    logger.info(f"Week {week_str}: GM2% New: {gm2_pct_new}, GM2% Returning: {gm2_pct_returning}")
+    logger.info(f"Week {week_str}: Gross Revenue New: {gross_revenue_new}, Gross Revenue Returning: {gross_revenue_returning}")
+    
     # Calculate GM2 in SEK: Gross Revenue * GM2 percentage
     gm2_new = gross_revenue_new * gm2_pct_new
     gm2_returning = gross_revenue_returning * gm2_pct_returning
     gm2_total = gm2_new + gm2_returning
+    
+    logger.info(f"Week {week_str}: GM2 New: {gm2_new}, GM2 Returning: {gm2_returning}")
     
     # Get marketing spend
     marketing_spend = dema_df['Marketing spend'].sum() if not dema_df.empty and 'Marketing spend' in dema_df.columns else 0
@@ -188,6 +199,8 @@ def calculate_week_contributions(qlik_df: pd.DataFrame, dema_df: pd.DataFrame, d
     contribution_new = gm2_new - marketing_new
     contribution_returning = gm2_returning - marketing_returning
     contribution_total = gm2_total - marketing_spend
+    
+    logger.info(f"Week {week_str}: Contribution New: {contribution_new}, Contribution Returning: {contribution_returning}")
     
     return {
         'week': week_str,
