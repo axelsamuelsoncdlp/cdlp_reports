@@ -27,6 +27,7 @@ from weekly_report.src.metrics.sessions_per_country import calculate_sessions_pe
 from weekly_report.src.metrics.conversion_per_country import calculate_conversion_per_country_for_weeks
 from weekly_report.src.metrics.new_customers_per_country import calculate_new_customers_per_country_for_weeks
 from weekly_report.src.metrics.returning_customers_per_country import calculate_returning_customers_per_country_for_weeks
+from weekly_report.src.metrics.aov_new_customers_per_country import calculate_aov_new_customers_per_country_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
