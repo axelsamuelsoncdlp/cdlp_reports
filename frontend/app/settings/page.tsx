@@ -139,7 +139,10 @@ export default function Settings() {
                 {loading ? 'Refreshing...' : 'Refresh All Data'}
               </Button>
               <Button
-                onClick={() => loadMetadata(true)}
+                onClick={() => {
+                  loadMetadata(true)
+                  loadDimensions()
+                }}
                 variant="ghost"
                 className="flex items-center gap-2"
               >
