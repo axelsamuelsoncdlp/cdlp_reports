@@ -288,7 +288,18 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Contribution New
+                      Contribution New Customer
+                    </Link>
+                    <Link
+                      href="/contribution-new-total-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/contribution-new-total-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Contribution New Total
                     </Link>
                   </div>
                 )}

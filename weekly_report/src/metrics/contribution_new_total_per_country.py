@@ -1,4 +1,4 @@
-"""Contribution per New Customer per country metrics calculation."""
+"""Contribution (total) per country metrics calculation."""
 from typing import Dict, Any, List
 import pandas as pd
 from loguru import logger
@@ -7,13 +7,13 @@ from pathlib import Path
 from weekly_report.src.metrics.table1 import load_all_raw_data
 
 
-def calculate_contribution_new_per_country_for_week(
+def calculate_contribution_new_total_per_country_for_week(
     qlik_df: pd.DataFrame,
     dema_df: pd.DataFrame,
     dema_gm2_df: pd.DataFrame,
     week_str: str
 ) -> Dict[str, Any]:
-    """Calculate contribution per new customer per country for a single week."""
+    """Calculate total contribution per country for new customers for a single week."""
     
     if qlik_df.empty or dema_gm2_df.empty or dema_df.empty:
         logger.warning(f"Missing data for week {week_str}")
@@ -33,7 +33,7 @@ def calculate_contribution_new_per_country_for_week(
             'countries': {}
         }
     
-    # Get marketing spend per country
+    # Get marketing spend per country (70% allocation for new customers)
     country_spend = dema_df.groupby('Country').agg({
         'Marketing spend': 'sum'
     }).reset_index()
@@ -44,11 +44,6 @@ def calculate_contribution_new_per_country_for_week(
         'Gross Revenue': 'sum'
     }).reset_index()
     country_revenue.columns = ['Country', 'gross_revenue']
-    
-    # Count new customers per country
-    country_customers = new_customers_df.groupby('Country').agg(
-        new_customers=('Customer E-mail', 'nunique')
-    ).reset_index()
     
     # Get GM2 per country for new customers
     logger.info(f"Week {week_str}: GM2 columns: {dema_gm2_df.columns.tolist()}")
@@ -71,7 +66,6 @@ def calculate_contribution_new_per_country_for_week(
             overall_gm2_pct = new_gm2_df['Gross margin 2 - Dema MTA'].mean() if 'Gross margin 2 - Dema MTA' in new_gm2_df.columns else 0
             
             # Create a dummy country_gm2 with the overall percentage for all countries
-            # We'll assign the same GM2% to all countries from revenue data
             country_gm2 = country_revenue[['Country']].copy()
             country_gm2['gm2_pct'] = overall_gm2_pct
             logger.info(f"Week {week_str}: Using overall GM2%: {overall_gm2_pct} for all countries")
@@ -82,21 +76,10 @@ def calculate_contribution_new_per_country_for_week(
             'countries': {}
         }
     
-    # Calculate total for all countries
-    total_revenue = country_revenue['gross_revenue'].sum()
-    total_new_customers = country_customers['new_customers'].sum()
-    total_marketing_spend = country_spend['New customer spend'].sum()
-    
-    # Debug: Show individual dataframes
-    logger.info(f"Week {week_str}: Revenue countries: {country_revenue['Country'].unique().tolist()}")
-    logger.info(f"Week {week_str}: GM2 countries: {country_gm2['Country'].unique().tolist()}")
-    logger.info(f"Week {week_str}: Spend countries: {country_spend['Country'].unique().tolist()}")
-    logger.info(f"Week {week_str}: Customer countries: {country_customers['Country'].unique().tolist()}")
-    
     # Merge all data
     merged_df = pd.merge(
         pd.merge(country_revenue, country_gm2, on='Country', how='outer'),
-        pd.merge(country_spend, country_customers, on='Country', how='outer'),
+        country_spend,
         on='Country',
         how='outer'
     ).fillna(0)
@@ -107,18 +90,12 @@ def calculate_contribution_new_per_country_for_week(
     # Calculate GM2 in SEK per country = Gross Revenue * GM2 percentage
     merged_df['gm2_sek'] = merged_df['gross_revenue'] * merged_df['gm2_pct']
     
-    # Calculate Contribution = GM2 - Marketing spend (for new customers)
-    merged_df['contribution'] = merged_df['gm2_sek'] - merged_df['New customer spend']
-    
-    # Calculate Contribution per New Customer = Contribution / New Customers
-    merged_df['contribution_per_customer'] = merged_df.apply(
-        lambda row: row['contribution'] / row['new_customers'] if row['new_customers'] > 0 else 0,
-        axis=1
-    )
+    # Calculate Total Contribution = GM2 - Marketing spend (for new customers)
+    merged_df['contribution_total'] = merged_df['gm2_sek'] - merged_df['New customer spend']
     
     # Debug logging
     logger.info(f"Week {week_str}: Merged data shape: {merged_df.shape}")
-    logger.info(f"Week {week_str}: Sample countries: {merged_df[['Country', 'gross_revenue', 'gm2_pct', 'new_customers', 'contribution_per_customer']].head().to_dict()}")
+    logger.info(f"Week {week_str}: Sample countries: {merged_df[['Country', 'gross_revenue', 'gm2_pct', 'contribution_total']].head().to_dict()}")
     
     # Create result dict
     result = {
@@ -126,53 +103,40 @@ def calculate_contribution_new_per_country_for_week(
         'countries': {}
     }
     
-    # Add each country's contribution per new customer
+    # Add each country's total contribution
     for _, row in merged_df.iterrows():
         country = row['Country']
         if pd.notna(country) and country != '-':
-            result['countries'][country] = float(row['contribution_per_customer'])
+            result['countries'][country] = float(row['contribution_total'])
     
-    # Calculate Total Contribution per New Customer
+    # Calculate Total Contribution (aggregate of all countries)
     total_gm2_sek = merged_df['gm2_sek'].sum()
     total_marketing_spend = merged_df['New customer spend'].sum()
     total_contribution = total_gm2_sek - total_marketing_spend
-    total_new_customers = merged_df['new_customers'].sum()
     
-    if total_new_customers > 0:
-        total_contribution_per_customer = total_contribution / total_new_customers
-    else:
-        total_contribution_per_customer = 0
-    
-    result['countries']['Total'] = float(total_contribution_per_customer)
+    result['countries']['Total'] = float(total_contribution)
     
     # Calculate ROW (Rest of World) - aggregate of smaller countries
-    # Main countries to exclude
     main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
     
     row_df = merged_df[~merged_df['Country'].isin(main_countries) & (merged_df['Country'] != 'Total') & (merged_df['Country'] != 'ROW')]
     
-    logger.info(f"Week {week_str} Contribution: All countries: {merged_df['Country'].unique().tolist()}")
-    logger.info(f"Week {week_str} Contribution: ROW countries: {row_df['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str} Contribution Total: All countries: {merged_df['Country'].unique().tolist()}")
+    logger.info(f"Week {week_str} Contribution Total: ROW countries: {row_df['Country'].unique().tolist()}")
     
     row_gm2_sek = row_df['gm2_sek'].sum()
     row_marketing_spend = row_df['New customer spend'].sum()
     row_contribution = row_gm2_sek - row_marketing_spend
-    row_customers = row_df['new_customers'].sum()
     
-    logger.info(f"Week {week_str} Contribution: ROW gm2_sek: {row_gm2_sek}, marketing: {row_marketing_spend}, customers: {row_customers}")
+    logger.info(f"Week {week_str} Contribution Total: ROW gm2_sek: {row_gm2_sek}, marketing: {row_marketing_spend}, contribution: {row_contribution}")
     
-    if row_customers > 0:
-        row_contribution_per_customer = row_contribution / row_customers
-    else:
-        row_contribution_per_customer = 0
-    
-    result['countries']['ROW'] = float(row_contribution_per_customer)
+    result['countries']['ROW'] = float(row_contribution)
     
     return result
 
 
-def calculate_contribution_new_per_country_for_weeks(base_week: str, num_weeks: int, data_root: Path) -> List[Dict[str, Any]]:
-    """Calculate contribution per new customer per country for multiple weeks."""
+def calculate_contribution_new_total_per_country_for_weeks(base_week: str, num_weeks: int, data_root: Path) -> List[Dict[str, Any]]:
+    """Calculate total contribution per country for new customers for multiple weeks."""
     
     results = []
     
@@ -227,8 +191,8 @@ def calculate_contribution_new_per_country_for_weeks(base_week: str, num_weeks: 
                 logger.warning(f"Missing data for week {week_str}")
                 continue
             
-            # Calculate contribution per new customer per country
-            week_data = calculate_contribution_new_per_country_for_week(
+            # Calculate total contribution per country
+            week_data = calculate_contribution_new_total_per_country_for_week(
                 week_qlik_df,
                 week_dema_df,
                 week_dema_gm2_df,
@@ -245,7 +209,7 @@ def calculate_contribution_new_per_country_for_weeks(base_week: str, num_weeks: 
                 last_year_dema_gm2_df = dema_gm2_df[dema_gm2_df['iso_week'] == last_year_week_str].copy()
                 
                 if not last_year_qlik_df.empty and not last_year_dema_df.empty and not last_year_dema_gm2_df.empty:
-                    last_year_data = calculate_contribution_new_per_country_for_week(
+                    last_year_data = calculate_contribution_new_total_per_country_for_week(
                         last_year_qlik_df,
                         last_year_dema_df,
                         last_year_dema_gm2_df,

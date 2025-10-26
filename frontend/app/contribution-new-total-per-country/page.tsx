@@ -1,14 +1,14 @@
 'use client'
 
-import { useContributionNewPerCountry } from '@/contexts/DataCacheContext'
+import { useContributionNewTotalPerCountry } from '@/contexts/DataCacheContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 
-export default function ContributionNewPerCountry() {
-  const { contribution_new_per_country } = useContributionNewPerCountry()
+export default function ContributionNewTotalPerCountry() {
+  const { contribution_new_total_per_country } = useContributionNewTotalPerCountry()
 
   // Define country order and labels
   const countryOrder = [
@@ -25,17 +25,17 @@ export default function ContributionNewPerCountry() {
 
   const formatValue = (value: number): string => {
     if (value === 0) return '0'
-    return Math.round(value).toString()
+    return Math.round(value / 1000).toString() + 'k'
   }
 
-  if (!contribution_new_per_country) {
+  if (!contribution_new_total_per_country) {
     return (
       <div className="space-y-8">
         <div className="flex items-center gap-3 mb-6">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">Loading Contribution per New Customer per Country</h2>
-            <p className="text-sm text-gray-600">Processing contribution data by country...</p>
+            <h2 className="text-lg font-semibold text-gray-900">Loading Total Contribution per Country</h2>
+            <p className="text-sm text-gray-600">Processing total contribution data by country...</p>
           </div>
         </div>
         
@@ -59,7 +59,7 @@ export default function ContributionNewPerCountry() {
     <div className="space-y-8">
       <div className="grid grid-cols-3 gap-6">
         {countryOrder.map((country, index) => {
-          const chartData = contribution_new_per_country.contribution_new_per_country.map((week: any) => {
+          const chartData = contribution_new_total_per_country.contribution_new_total_per_country.map((week: any) => {
             const weekNum = week.week.split('-')[1]
             let currentValue = 0
             let lastYearValue = 0
