@@ -12,6 +12,7 @@ import {
   getWomenCategorySales,
   getSessionsPerCountry,
   getConversionPerCountry,
+  getNewCustomersPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -21,11 +22,12 @@ import {
   type MenCategorySalesResponse,
   type WomenCategorySalesResponse,
   type SessionsPerCountryResponse,
-  type ConversionPerCountryResponse
+  type ConversionPerCountryResponse,
+  type NewCustomersPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -43,6 +45,7 @@ interface CacheData {
   women_category_sales: WomenCategorySalesResponse | null
   sessions_per_country: SessionsPerCountryResponse | null
   conversion_per_country: ConversionPerCountryResponse | null
+  new_customers_per_country: NewCustomersPerCountryResponse | null
   timestamp: number
 }
 
@@ -57,6 +60,7 @@ interface DataCacheContextType {
   women_category_sales: WomenCategorySalesResponse | null
   sessions_per_country: SessionsPerCountryResponse | null
   conversion_per_country: ConversionPerCountryResponse | null
+  new_customers_per_country: NewCustomersPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -83,6 +87,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(null)
   const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(null)
   const [conversion_per_country, setConversion_per_country] = useState<ConversionPerCountryResponse | null>(null)
+  const [new_customers_per_country, setNew_customers_per_country] = useState<NewCustomersPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -135,6 +140,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setWomen_category_sales(cached.women_category_sales)
         setSessions_per_country(cached.sessions_per_country)
         setConversion_per_country(cached.conversion_per_country)
+        setNew_customers_per_country(cached.new_customers_per_country)
         return
       }
     }
@@ -245,17 +251,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'conversion_per_country', 
         stepNumber: 10, 
-        totalSteps: 10, 
+        totalSteps: 11, 
         message: 'Loading conversion per country...', 
-        percentage: 95 
+        percentage: 90 
       })
       const conversionPerCountryData = await getConversionPerCountry(week, 8)
       setConversion_per_country(conversionPerCountryData)
 
+      // Step 11: Load New Customers per Country
+      setLoadingProgress({ 
+        step: 'new_customers_per_country', 
+        stepNumber: 11, 
+        totalSteps: 11, 
+        message: 'Loading new customers per country...', 
+        percentage: 95 
+      })
+      const newCustomersPerCountryData = await getNewCustomersPerCountry(week, 8)
+      setNew_customers_per_country(newCustomersPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 10, 
-        totalSteps: 10, 
+        stepNumber: 11, 
+        totalSteps: 11, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -272,6 +289,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         women_category_sales: womenCategorySalesData,
         sessions_per_country: sessionsPerCountryData,
         conversion_per_country: conversionPerCountryData,
+        new_customers_per_country: newCustomersPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -321,6 +339,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     women_category_sales,
     sessions_per_country,
     conversion_per_country,
+    new_customers_per_country,
     loading,
     error,
     loadingProgress,
@@ -390,4 +409,9 @@ export function useSessionsPerCountry() {
 export function useConversionPerCountry() {
   const { conversion_per_country } = useDataCache()
   return { conversion_per_country }
+}
+
+export function useNewCustomersPerCountry() {
+  const { new_customers_per_country } = useDataCache()
+  return { new_customers_per_country }
 }
