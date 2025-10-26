@@ -63,6 +63,16 @@ def calculate_ncac_per_country_for_week(
         if pd.notna(country) and country != '-':
             result['countries'][country] = float(row['ncac'])
     
+    # Calculate Total nCAC = Total New Customer Spend / Total New Customers
+    total_new_customer_spend = merged_df['New customer spend'].sum()
+    total_new_customers = merged_df['new_customers'].sum()
+    if total_new_customers > 0:
+        total_ncac = total_new_customer_spend / total_new_customers
+    else:
+        total_ncac = 0
+    
+    result['countries']['Total'] = float(total_ncac)
+    
     return result
 
 

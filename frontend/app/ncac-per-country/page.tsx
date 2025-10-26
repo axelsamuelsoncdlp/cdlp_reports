@@ -65,10 +65,10 @@ export default function NCACPerCountry() {
             let lastYearValue = 0
 
             if (country.key === 'Total') {
-              // Calculate total new customers across all countries
-              currentValue = Object.values(week.countries).reduce((sum: number, val: any) => sum + val, 0)
+              // Use Total directly from backend calculation
+              currentValue = week.countries['Total'] || 0
               if (week.last_year) {
-                lastYearValue = Object.values(week.last_year.countries).reduce((sum: number, val: any) => sum + val, 0)
+                lastYearValue = week.last_year.countries['Total'] || 0
               }
             } else if (country.key === 'ROW') {
               // Calculate ROW (Rest of World) - all countries except the main ones

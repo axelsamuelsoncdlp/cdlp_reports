@@ -55,16 +55,18 @@ def calculate_contribution_new_per_country_for_week(
             'countries': {}
         }
     
-    # Get gross revenue per country for new customers
+    # Get gross revenue per country for new customers  
     country_revenue = new_customers_df.groupby('Country').agg({
         'Gross Revenue': 'sum'
     }).reset_index()
     country_revenue.columns = ['Country', 'gross_revenue']
     
-    # Count new customers per country
-    country_customers = new_customers_df.groupby('Country').agg(
-        new_customers=('Customer E-mail', 'nunique')
-    ).reset_index()
+    # Calculate total for all countries
+    total_revenue = country_revenue['gross_revenue'].sum()
+    total_new_customers = country_customers['new_customers'].sum()
+    total_marketing_spend = country_spend['New customer spend'].sum()
+    
+    # Count new customers per country (already calculated above)
     
     # Merge all data
     merged_df = pd.merge(
@@ -86,6 +88,10 @@ def calculate_contribution_new_per_country_for_week(
         axis=1
     )
     
+    # Debug logging
+    logger.info(f"Week {week_str}: Merged data shape: {merged_df.shape}")
+    logger.info(f"Week {week_str}: Sample countries: {merged_df[['Country', 'gross_revenue', 'gm2_pct', 'new_customers', 'contribution_per_customer']].head().to_dict()}")
+    
     # Create result dict
     result = {
         'week': week_str,
@@ -97,6 +103,19 @@ def calculate_contribution_new_per_country_for_week(
         country = row['Country']
         if pd.notna(country) and country != '-':
             result['countries'][country] = float(row['contribution_per_customer'])
+    
+    # Calculate Total Contribution per New Customer
+    total_gm2_sek = merged_df['gm2_sek'].sum()
+    total_marketing_spend = merged_df['New customer spend'].sum()
+    total_contribution = total_gm2_sek - total_marketing_spend
+    total_new_customers = merged_df['new_customers'].sum()
+    
+    if total_new_customers > 0:
+        total_contribution_per_customer = total_contribution / total_new_customers
+    else:
+        total_contribution_per_customer = 0
+    
+    result['countries']['Total'] = float(total_contribution_per_customer)
     
     return result
 
