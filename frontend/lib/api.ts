@@ -443,6 +443,22 @@ export interface ContributionNewTotalPerCountryResponse {
   }
 }
 
+export interface ContributionReturningPerCountryResponse {
+  contribution_returning_per_country: ContributionNewPerCountryData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
+export interface ContributionReturningTotalPerCountryResponse {
+  contribution_returning_total_per_country: ContributionNewPerCountryData[]
+  period_info: {
+    latest_week: string
+    latest_dates: string
+  }
+}
+
 export async function getTopProducts(baseWeek: string, numWeeks: number = 1, topN: number = 20, customerType: 'new' | 'returning' = 'new'): Promise<TopProductsResponse> {
   const response = await fetch(`${API_BASE_URL}/api/top-products?base_week=${baseWeek}&num_weeks=${numWeeks}&top_n=${topN}&customer_type=${customerType}`)
   if (!response.ok) {
@@ -535,6 +551,22 @@ export async function getContributionNewTotalPerCountry(baseWeek: string, numWee
   const response = await fetch(`${API_BASE_URL}/api/contribution-new-total-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
   if (!response.ok) {
     throw new Error(`Failed to fetch Contribution New Total per Country data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getContributionReturningPerCountry(baseWeek: string, numWeeks: number = 8): Promise<ContributionReturningPerCountryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/contribution-returning-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Contribution Returning per Country data: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getContributionReturningTotalPerCountry(baseWeek: string, numWeeks: number = 8): Promise<ContributionReturningTotalPerCountryResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/contribution-returning-total-per-country?base_week=${baseWeek}&num_weeks=${numWeeks}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch Contribution Returning Total per Country data: ${response.statusText}`)
   }
   return response.json()
 }

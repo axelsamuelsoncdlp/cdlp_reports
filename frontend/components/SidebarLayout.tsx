@@ -35,6 +35,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/ncac-per-country': { title: 'nCAC per Country', subtitle: 'New customer acquisition cost by country' },
       '/contribution-new-per-country': { title: 'Contribution New Customer per Country', subtitle: 'Contribution per new customer by country' },
       '/contribution-new-total-per-country': { title: 'Contribution New Total per Country', subtitle: 'Total contribution from new customers by country' },
+      '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: 'Contribution per returning customer by country' },
+      '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: 'Total contribution from returning customers by country' },
       '/settings': { title: 'Settings', subtitle: 'Configure data sources and file uploads' },
     }
     
@@ -330,6 +332,28 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     >
                       <IconChartBar className="h-4 w-4" />
                       Contribution New Total
+                    </Link>
+                    <Link
+                      href="/contribution-returning-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/contribution-returning-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Contribution Returning Customer
+                    </Link>
+                    <Link
+                      href="/contribution-returning-total-per-country"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive('/contribution-returning-total-per-country')
+                          ? 'bg-gray-200 text-gray-900'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <IconChartBar className="h-4 w-4" />
+                      Contribution Returning Total
                     </Link>
                   </div>
                 )}

@@ -34,6 +34,8 @@ from weekly_report.src.metrics.marketing_spend_per_country import calculate_mark
 from weekly_report.src.metrics.ncac_per_country import calculate_ncac_per_country_for_weeks
 from weekly_report.src.metrics.contribution_new_per_country import calculate_contribution_new_per_country_for_weeks
 from weekly_report.src.metrics.contribution_new_total_per_country import calculate_contribution_new_total_per_country_for_weeks
+from weekly_report.src.metrics.contribution_returning_per_country import calculate_contribution_returning_per_country_for_weeks
+from weekly_report.src.metrics.contribution_returning_total_per_country import calculate_contribution_returning_total_per_country_for_weeks
 from weekly_report.src.pdf.table1_builder import build_table1_pdf
 from weekly_report.src.cache.manager import metrics_cache
 from weekly_report.src.config import load_config
@@ -282,6 +284,16 @@ class ContributionNewPerCountryResponse(BaseModel):
 
 class ContributionNewTotalPerCountryResponse(BaseModel):
     contribution_new_total_per_country: List[ContributionNewPerCountryData]  # Same data structure, different metric
+    period_info: Dict[str, Any]
+
+
+class ContributionReturningPerCountryResponse(BaseModel):
+    contribution_returning_per_country: List[ContributionNewPerCountryData]  # Same data structure
+    period_info: Dict[str, Any]
+
+
+class ContributionReturningTotalPerCountryResponse(BaseModel):
+    contribution_returning_total_per_country: List[ContributionNewPerCountryData]  # Same data structure
     period_info: Dict[str, Any]
 
 
@@ -1232,6 +1244,80 @@ async def get_contribution_new_total_per_country(
     except Exception as e:
         import traceback
         logger.error(f"Error getting Total Contribution per Country metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/contribution-returning-per-country")
+async def get_contribution_returning_per_country(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Contribution per Returning Customer per Country metrics for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        contribution_data = calculate_contribution_returning_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        
+        # Format response
+        response = ContributionReturningPerCountryResponse(
+            contribution_returning_per_country=contribution_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Contribution per Returning Customer per Country metrics for {base_week}: {e}")
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@app.get("/api/contribution-returning-total-per-country")
+async def get_contribution_returning_total_per_country(
+    base_week: str = Query(..., description="Base ISO week like '2025-42'"),
+    num_weeks: int = Query(8, description="Number of weeks to analyze")
+):
+    """Get Total Contribution per Country for returning customers for the last N weeks."""
+    
+    try:
+        if not validate_iso_week(base_week):
+            raise HTTPException(status_code=400, detail=f"Invalid ISO week format: {base_week}")
+        
+        if num_weeks < 1 or num_weeks > 52:
+            raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
+        
+        config = load_config(week=base_week)
+        contribution_data = calculate_contribution_returning_total_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        
+        # Format response
+        response = ContributionReturningTotalPerCountryResponse(
+            contribution_returning_total_per_country=contribution_data,
+            period_info={
+                "latest_week": base_week,
+                "latest_dates": "N/A"
+            }
+        )
+        
+        return response
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        import traceback
+        logger.error(f"Error getting Total Contribution per Country for returning customers for {base_week}: {e}")
         logger.error(f"Traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Internal server error")
 

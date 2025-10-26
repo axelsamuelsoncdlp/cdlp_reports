@@ -20,6 +20,8 @@ import {
   getNCACPerCountry,
   getContributionNewPerCountry,
   getContributionNewTotalPerCountry,
+  getContributionReturningPerCountry,
+  getContributionReturningTotalPerCountry,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -37,11 +39,13 @@ import {
   type MarketingSpendPerCountryResponse,
   type nCACPerCountryResponse,
   type ContributionNewPerCountryResponse,
-  type ContributionNewTotalPerCountryResponse
+  type ContributionNewTotalPerCountryResponse,
+  type ContributionReturningPerCountryResponse,
+  type ContributionReturningTotalPerCountryResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
-  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'returning_customers_per_country' | 'aov_new_customers_per_country' | 'aov_returning_customers_per_country' | 'marketing_spend_per_country' | 'ncac_per_country' | 'contribution_new_per_country' | 'contribution_new_total_per_country' | 'complete'
+  step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'contribution' | 'gender_sales' | 'men_category_sales' | 'women_category_sales' | 'sessions_per_country' | 'conversion_per_country' | 'new_customers_per_country' | 'returning_customers_per_country' | 'aov_new_customers_per_country' | 'aov_returning_customers_per_country' | 'marketing_spend_per_country' | 'ncac_per_country' | 'contribution_new_per_country' | 'contribution_new_total_per_country' | 'contribution_returning_per_country' | 'contribution_returning_total_per_country' | 'complete'
   stepNumber: number
   totalSteps: number
   message: string
@@ -67,6 +71,8 @@ interface CacheData {
   ncac_per_country: nCACPerCountryResponse | null
   contribution_new_per_country: ContributionNewPerCountryResponse | null
   contribution_new_total_per_country: ContributionNewTotalPerCountryResponse | null
+  contribution_returning_per_country: ContributionReturningPerCountryResponse | null
+  contribution_returning_total_per_country: ContributionReturningTotalPerCountryResponse | null
   timestamp: number
 }
 
@@ -89,6 +95,8 @@ interface DataCacheContextType {
   ncac_per_country: nCACPerCountryResponse | null
   contribution_new_per_country: ContributionNewPerCountryResponse | null
   contribution_new_total_per_country: ContributionNewTotalPerCountryResponse | null
+  contribution_returning_per_country: ContributionReturningPerCountryResponse | null
+  contribution_returning_total_per_country: ContributionReturningTotalPerCountryResponse | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -123,6 +131,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [ncac_per_country, setNcac_per_country] = useState<nCACPerCountryResponse | null>(null)
   const [contribution_new_per_country, setContribution_new_per_country] = useState<ContributionNewPerCountryResponse | null>(null)
   const [contribution_new_total_per_country, setContribution_new_total_per_country] = useState<ContributionNewTotalPerCountryResponse | null>(null)
+  const [contribution_returning_per_country, setContribution_returning_per_country] = useState<ContributionReturningPerCountryResponse | null>(null)
+  const [contribution_returning_total_per_country, setContribution_returning_total_per_country] = useState<ContributionReturningTotalPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -183,6 +193,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setNcac_per_country(cached.ncac_per_country)
         setContribution_new_per_country(cached.contribution_new_per_country)
         setContribution_new_total_per_country(cached.contribution_new_total_per_country)
+        setContribution_returning_per_country(cached.contribution_returning_per_country)
+        setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
         return
       }
     }
@@ -379,19 +391,41 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
 
       // Step 18: Load Contribution New Total per Country
       setLoadingProgress({ 
-        step: 'contribution_new_per_country', 
+        step: 'contribution_new_total_per_country', 
         stepNumber: 18, 
-        totalSteps: 18, 
+        totalSteps: 20, 
         message: 'Loading total contribution per country...', 
-        percentage: 97 
+        percentage: 90 
       })
       const contributionNewTotalPerCountryData = await getContributionNewTotalPerCountry(week, 8)
       setContribution_new_total_per_country(contributionNewTotalPerCountryData)
 
+      // Step 19: Load Contribution Returning per Country
+      setLoadingProgress({ 
+        step: 'contribution_returning_per_country', 
+        stepNumber: 19, 
+        totalSteps: 20, 
+        message: 'Loading contribution per returning customer per country...', 
+        percentage: 95 
+      })
+      const contributionReturningPerCountryData = await getContributionReturningPerCountry(week, 8)
+      setContribution_returning_per_country(contributionReturningPerCountryData)
+
+      // Step 20: Load Contribution Returning Total per Country
+      setLoadingProgress({ 
+        step: 'contribution_returning_total_per_country', 
+        stepNumber: 20, 
+        totalSteps: 20, 
+        message: 'Loading total contribution per returning customers by country...', 
+        percentage: 97 
+      })
+      const contributionReturningTotalPerCountryData = await getContributionReturningTotalPerCountry(week, 8)
+      setContribution_returning_total_per_country(contributionReturningTotalPerCountryData)
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 18, 
-        totalSteps: 18, 
+        stepNumber: 20, 
+        totalSteps: 20, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -416,6 +450,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         ncac_per_country: ncacPerCountryData,
         contribution_new_per_country: contributionNewPerCountryData,
         contribution_new_total_per_country: contributionNewTotalPerCountryData,
+        contribution_returning_per_country: contributionReturningPerCountryData,
+        contribution_returning_total_per_country: contributionReturningTotalPerCountryData,
         timestamp: Date.now()
       })
     } catch (err) {
@@ -473,6 +509,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     ncac_per_country,
     contribution_new_per_country,
     contribution_new_total_per_country,
+    contribution_returning_per_country,
+    contribution_returning_total_per_country,
     loading,
     error,
     loadingProgress,
@@ -582,4 +620,14 @@ export function useContributionNewPerCountry() {
 export function useContributionNewTotalPerCountry() {
   const { contribution_new_total_per_country } = useDataCache()
   return { contribution_new_total_per_country }
+}
+
+export function useContributionReturningPerCountry() {
+  const { contribution_returning_per_country } = useDataCache()
+  return { contribution_returning_per_country }
+}
+
+export function useContributionReturningTotalPerCountry() {
+  const { contribution_returning_total_per_country } = useDataCache()
+  return { contribution_returning_total_per_country }
 }
