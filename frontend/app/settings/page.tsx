@@ -29,8 +29,8 @@ export default function Settings() {
         try {
           const parsed = JSON.parse(cached)
           const cacheAge = Date.now() - parsed.timestamp
-          // Cache for 1 hour
-          if (cacheAge < 60 * 60 * 1000) {
+          // Cache for 5 minutes (reduced from 1 hour for more frequent updates)
+          if (cacheAge < 5 * 60 * 1000) {
             setMetadata(parsed.data)
             return
           }
@@ -42,19 +42,36 @@ export default function Settings() {
     
     try {
       const response = await fetch(`http://localhost:8000/api/file-metadata?week=${selectedWeek}`)
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch metadata: ${response.statusText}`)
+      }
+      
       const data = await response.json()
-      setMetadata(data)
-      // Save to cache
-      localStorage.setItem(cacheKey, JSON.stringify({
-        data,
-        timestamp: Date.now()
-      }))
+      
+      // Check if we got valid data
+      if (data && typeof data === 'object') {
+        setMetadata(data)
+        // Save to cache
+        localStorage.setItem(cacheKey, JSON.stringify({
+          data,
+          timestamp: Date.now()
+        }))
+      } else {
+        console.error('Invalid metadata response:', data)
+        setMetadata({}) // Set empty object to show "No file uploaded yet"
+      }
     } catch (error) {
       console.error('Failed to load metadata:', error)
+      // Don't set metadata to null, leave it as undefined so we show loading state
+      // Or set it to empty object to show "No file uploaded yet"
+      setMetadata({})
     }
   }
 
   useEffect(() => {
+    // Reset metadata to show loading state
+    setMetadata(null)
     loadMetadata()
   }, [selectedWeek])
 
@@ -102,6 +119,14 @@ export default function Settings() {
                 )}
                 {loading ? 'Refreshing...' : 'Refresh All Data'}
               </Button>
+              <Button
+                onClick={() => loadMetadata(true)}
+                variant="ghost"
+                className="flex items-center gap-2"
+              >
+                <RefreshCw className="h-4 w-4" />
+                Reload Metadata
+              </Button>
               {loading && loadingProgress && (
                 <div className="text-sm text-gray-600">
                   {loadingProgress.message} ({loadingProgress.percentage}%)
@@ -128,7 +153,12 @@ export default function Settings() {
                   onUploadSuccess={() => loadMetadata(true)}
                 />
                 
-                {metadata && metadata[ft.type] ? (
+                {metadata === null ? (
+                  <div className="text-sm text-gray-500 italic flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading...
+                  </div>
+                ) : metadata && metadata[ft.type] ? (
                   <FileMetadata
                     filename={metadata[ft.type].filename}
                     firstDate={metadata[ft.type].first_date}
@@ -136,11 +166,11 @@ export default function Settings() {
                     uploadedAt={metadata[ft.type].uploaded_at}
                     rowCount={metadata[ft.type].row_count}
                   />
-                ) : metadata ? (
+                ) : (
                   <div className="text-sm text-gray-500 italic">
                     No file uploaded yet
                   </div>
-                ) : null}
+                )}
               </div>
             ))}
           </div>
