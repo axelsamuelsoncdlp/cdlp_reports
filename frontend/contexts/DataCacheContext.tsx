@@ -119,53 +119,37 @@ const CACHE_EXPIRY = 60 * 60 * 1000 // 1 hour
 const DEFAULT_BASE_WEEK = '2025-42'
 
 export function DataCacheProvider({ children }: { children: ReactNode }) {
-  // Initialize state with cached data synchronously to avoid loader flash
-  const getCachedDataSync = (): CacheData | null => {
-    try {
-      const cached = localStorage.getItem(`dashboard_cache_${DEFAULT_BASE_WEEK}`)
-      if (!cached) return null
-      
-      const parsed: CacheData = JSON.parse(cached)
-      const cacheAge = Date.now() - parsed.timestamp
-      
-      if (cacheAge > CACHE_EXPIRY) {
-        localStorage.removeItem(`dashboard_cache_${DEFAULT_BASE_WEEK}`)
-        return null
-      }
-      
-      return parsed
-    } catch (err) {
-      return null
-    }
-  }
-
-  const initialCache = typeof window !== 'undefined' ? getCachedDataSync() : null
-
-  const [periods, setPeriods] = useState<PeriodsResponse | null>(initialCache?.periods || null)
-  const [metrics, setMetrics] = useState<MetricsResponse | null>(initialCache?.metrics || null)
-  const [markets, setMarkets] = useState<MarketsResponse | null>(initialCache?.markets || null)
-  const [kpis, setKpis] = useState<OnlineKPIsResponse | null>(initialCache?.kpis || null)
-  const [contribution, setContribution] = useState<ContributionResponse | null>(initialCache?.contribution || null)
-  const [gender_sales, setGender_sales] = useState<GenderSalesResponse | null>(initialCache?.gender_sales || null)
-  const [men_category_sales, setMen_category_sales] = useState<MenCategorySalesResponse | null>(initialCache?.men_category_sales || null)
-  const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(initialCache?.women_category_sales || null)
-  const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(initialCache?.sessions_per_country || null)
-  const [conversion_per_country, setConversion_per_country] = useState<ConversionPerCountryResponse | null>(initialCache?.conversion_per_country || null)
-  const [new_customers_per_country, setNew_customers_per_country] = useState<NewCustomersPerCountryResponse | null>(initialCache?.new_customers_per_country || null)
-  const [returning_customers_per_country, setReturning_customers_per_country] = useState<ReturningCustomersPerCountryResponse | null>(initialCache?.returning_customers_per_country || null)
-  const [aov_new_customers_per_country, setAov_new_customers_per_country] = useState<AOVNewCustomersPerCountryResponse | null>(initialCache?.aov_new_customers_per_country || null)
-  const [aov_returning_customers_per_country, setAov_returning_customers_per_country] = useState<AOVReturningCustomersPerCountryResponse | null>(initialCache?.aov_returning_customers_per_country || null)
-  const [marketing_spend_per_country, setMarketing_spend_per_country] = useState<MarketingSpendPerCountryResponse | null>(initialCache?.marketing_spend_per_country || null)
-  const [ncac_per_country, setNcac_per_country] = useState<nCACPerCountryResponse | null>(initialCache?.ncac_per_country || null)
-  const [contribution_new_per_country, setContribution_new_per_country] = useState<ContributionNewPerCountryResponse | null>(initialCache?.contribution_new_per_country || null)
-  const [contribution_new_total_per_country, setContribution_new_total_per_country] = useState<ContributionNewTotalPerCountryResponse | null>(initialCache?.contribution_new_total_per_country || null)
-  const [contribution_returning_per_country, setContribution_returning_per_country] = useState<ContributionReturningPerCountryResponse | null>(initialCache?.contribution_returning_per_country || null)
-  const [contribution_returning_total_per_country, setContribution_returning_total_per_country] = useState<ContributionReturningTotalPerCountryResponse | null>(initialCache?.contribution_returning_total_per_country || null)
-  const [total_contribution_per_country, setTotal_contribution_per_country] = useState<TotalContributionPerCountryResponse | null>(initialCache?.total_contribution_per_country || null)
+  const [periods, setPeriods] = useState<PeriodsResponse | null>(null)
+  const [metrics, setMetrics] = useState<MetricsResponse | null>(null)
+  const [markets, setMarkets] = useState<MarketsResponse | null>(null)
+  const [kpis, setKpis] = useState<OnlineKPIsResponse | null>(null)
+  const [contribution, setContribution] = useState<ContributionResponse | null>(null)
+  const [gender_sales, setGender_sales] = useState<GenderSalesResponse | null>(null)
+  const [men_category_sales, setMen_category_sales] = useState<MenCategorySalesResponse | null>(null)
+  const [women_category_sales, setWomen_category_sales] = useState<WomenCategorySalesResponse | null>(null)
+  const [sessions_per_country, setSessions_per_country] = useState<SessionsPerCountryResponse | null>(null)
+  const [conversion_per_country, setConversion_per_country] = useState<ConversionPerCountryResponse | null>(null)
+  const [new_customers_per_country, setNew_customers_per_country] = useState<NewCustomersPerCountryResponse | null>(null)
+  const [returning_customers_per_country, setReturning_customers_per_country] = useState<ReturningCustomersPerCountryResponse | null>(null)
+  const [aov_new_customers_per_country, setAov_new_customers_per_country] = useState<AOVNewCustomersPerCountryResponse | null>(null)
+  const [aov_returning_customers_per_country, setAov_returning_customers_per_country] = useState<AOVReturningCustomersPerCountryResponse | null>(null)
+  const [marketing_spend_per_country, setMarketing_spend_per_country] = useState<MarketingSpendPerCountryResponse | null>(null)
+  const [ncac_per_country, setNcac_per_country] = useState<nCACPerCountryResponse | null>(null)
+  const [contribution_new_per_country, setContribution_new_per_country] = useState<ContributionNewPerCountryResponse | null>(null)
+  const [contribution_new_total_per_country, setContribution_new_total_per_country] = useState<ContributionNewTotalPerCountryResponse | null>(null)
+  const [contribution_returning_per_country, setContribution_returning_per_country] = useState<ContributionReturningPerCountryResponse | null>(null)
+  const [contribution_returning_total_per_country, setContribution_returning_total_per_country] = useState<ContributionReturningTotalPerCountryResponse | null>(null)
+  const [total_contribution_per_country, setTotal_contribution_per_country] = useState<TotalContributionPerCountryResponse | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
-  const [baseWeek, setBaseWeek] = useState<string>(DEFAULT_BASE_WEEK)
+  const [baseWeek, setBaseWeekInternal] = useState<string>(DEFAULT_BASE_WEEK)
+  
+  // Wrap setBaseWeek to also save to localStorage
+  const setBaseWeek = useCallback((week: string) => {
+    setBaseWeekInternal(week)
+    localStorage.setItem('selected_week', week)
+  }, [])
 
   const getCacheKey = (week: string) => `dashboard_cache_${week}`
 
@@ -592,7 +576,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
 
   const refreshData = useCallback(async () => {
     await loadAllData(baseWeek, true)
-  }, [loadAllData, baseWeek])
+  }, [baseWeek, loadAllData])
 
   const clearCache = useCallback(() => {
     try {
@@ -611,8 +595,28 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     }
   }, [baseWeek])
 
-  // Load data on mount and when baseWeek changes
+  // Load data on mount and when baseWeek changes - BUT only if user has already selected a week
+  // Don't auto-load on initial mount - wait for user to select a week first
+  const [hasUserSelectedWeek, setHasUserSelectedWeek] = useState(false)
+  
   useEffect(() => {
+    // Check if user has ever selected a week (stored in localStorage)
+    const savedWeek = localStorage.getItem('selected_week')
+    if (savedWeek) {
+      setHasUserSelectedWeek(true)
+      setBaseWeekInternal(savedWeek)
+    } else {
+      // No saved week - don't load anything yet, wait for user to select
+      return
+    }
+  }, [])
+  
+  useEffect(() => {
+    // Only load if user has explicitly selected a week
+    if (!hasUserSelectedWeek && !localStorage.getItem('selected_week')) {
+      return // Skip loading until user selects a week
+    }
+    
     // Only load if we don't have cached data already
     const cached = getCachedData(baseWeek)
     if (cached) {
@@ -641,7 +645,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     } else {
       loadAllData(baseWeek)
     }
-  }, [baseWeek]) // Removed loadAllData from deps to avoid re-loading when it changes
+  }, [baseWeek, hasUserSelectedWeek]) // Load when week changes or when user first selects week
 
   const value: DataCacheContextType = {
     periods,
@@ -671,7 +675,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     loadAllData,
     refreshData,
     clearCache,
-    baseWeek,
+    baseWeek: baseWeek,
     setBaseWeek
   }
 

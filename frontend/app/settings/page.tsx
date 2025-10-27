@@ -144,6 +144,8 @@ export default function Settings() {
                 setSelectedWeek(week)
                 // Update the global baseWeek in DataCacheContext
                 setBaseWeek(week)
+                // Save the selected week to localStorage
+                localStorage.setItem('selected_week', week)
               }}
               onPeriodsChange={setPeriods}
             />
