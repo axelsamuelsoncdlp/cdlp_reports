@@ -111,6 +111,7 @@ interface DataCacheContextType {
   clearCache: () => void
   baseWeek: string
   setBaseWeek: (week: string) => void
+  isDataReady: boolean
 }
 
 const DataCacheContext = createContext<DataCacheContextType | undefined>(undefined)
