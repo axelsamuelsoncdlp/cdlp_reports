@@ -46,13 +46,6 @@ export default function PeriodSelector({
     }
   }
 
-  // Remove auto-fetch - periods should only load when explicitly requested
-  // useEffect(() => {
-  //   if (selectedWeek) {
-  //     fetchPeriods(selectedWeek)
-  //   }
-  // }, [selectedWeek])
-
   const handleWeekChange = (week: string) => {
     onWeekChange(week)
   }
@@ -70,7 +63,6 @@ export default function PeriodSelector({
               value={selectedWeek}
               onChange={(e) => handleWeekChange(e.target.value)}
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-              disabled={loading}
             >
               {weekOptions.map((week) => (
                 <option key={week} value={week}>
