@@ -690,7 +690,8 @@ async def get_gender_sales(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        gender_sales_data = calculate_gender_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        gender_sales_data = calculate_gender_sales_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = GenderSalesResponse(
@@ -727,7 +728,8 @@ async def get_men_category_sales(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        men_category_sales_data = calculate_men_category_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        men_category_sales_data = calculate_men_category_sales_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = MenCategorySalesResponse(
@@ -764,7 +766,8 @@ async def get_women_category_sales(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        women_category_sales_data = calculate_women_category_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        women_category_sales_data = calculate_women_category_sales_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = WomenCategorySalesResponse(
@@ -801,7 +804,9 @@ async def get_category_sales(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        category_sales_data = calculate_category_sales_for_weeks(base_week, num_weeks, config.raw_data_path)
+        # Pass the week-specific data path
+        data_path = config.data_root / "raw" / base_week
+        category_sales_data = calculate_category_sales_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = CategorySalesResponse(
@@ -846,7 +851,8 @@ async def get_top_products(
             raise HTTPException(status_code=400, detail=f"Customer type must be 'new' or 'returning'")
         
         config = load_config(week=base_week)
-        top_products_data = calculate_top_products_for_weeks(base_week, num_weeks, config.raw_data_path, top_n, customer_type)
+        data_path = config.data_root / "raw" / base_week
+        top_products_data = calculate_top_products_for_weeks(base_week, num_weeks, data_path, top_n, customer_type)
         
         # Format response
         response = TopProductsResponse(
@@ -891,7 +897,8 @@ async def get_top_products_by_gender(
             raise HTTPException(status_code=400, detail=f"Gender filter must be 'men' or 'women'")
         
         config = load_config(week=base_week)
-        top_products_data = calculate_top_products_by_gender_for_weeks(base_week, num_weeks, config.raw_data_path, gender_filter, top_n)
+        data_path = config.data_root / "raw" / base_week
+        top_products_data = calculate_top_products_by_gender_for_weeks(base_week, num_weeks, data_path, gender_filter, top_n)
         
         # Format response
         response = TopProductsResponse(
@@ -928,7 +935,8 @@ async def get_sessions_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        sessions_data = calculate_sessions_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        sessions_data = calculate_sessions_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = SessionsPerCountryResponse(
@@ -965,7 +973,8 @@ async def get_conversion_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        conversion_data = calculate_conversion_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        conversion_data = calculate_conversion_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ConversionPerCountryResponse(
@@ -1002,7 +1011,8 @@ async def get_new_customers_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        new_customers_data = calculate_new_customers_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        new_customers_data = calculate_new_customers_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = NewCustomersPerCountryResponse(
@@ -1039,7 +1049,8 @@ async def get_returning_customers_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        returning_customers_data = calculate_returning_customers_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        returning_customers_data = calculate_returning_customers_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ReturningCustomersPerCountryResponse(
@@ -1076,7 +1087,8 @@ async def get_aov_new_customers_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        aov_data = calculate_aov_new_customers_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        aov_data = calculate_aov_new_customers_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = AOVNewCustomersPerCountryResponse(
@@ -1113,7 +1125,8 @@ async def get_aov_returning_customers_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        aov_data = calculate_aov_returning_customers_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        aov_data = calculate_aov_returning_customers_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = AOVReturningCustomersPerCountryResponse(
@@ -1150,7 +1163,8 @@ async def get_marketing_spend_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        spend_data = calculate_marketing_spend_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        spend_data = calculate_marketing_spend_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = MarketingSpendPerCountryResponse(
@@ -1187,7 +1201,8 @@ async def get_ncac_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        ncac_data = calculate_ncac_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        ncac_data = calculate_ncac_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = nCACPerCountryResponse(
@@ -1224,7 +1239,8 @@ async def get_contribution_new_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        contribution_data = calculate_contribution_new_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        contribution_data = calculate_contribution_new_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ContributionNewPerCountryResponse(
@@ -1261,7 +1277,8 @@ async def get_contribution_new_total_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        contribution_data = calculate_contribution_new_total_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        contribution_data = calculate_contribution_new_total_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ContributionNewTotalPerCountryResponse(
@@ -1298,7 +1315,8 @@ async def get_contribution_returning_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        contribution_data = calculate_contribution_returning_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        contribution_data = calculate_contribution_returning_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ContributionReturningPerCountryResponse(
@@ -1335,7 +1353,8 @@ async def get_contribution_returning_total_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        contribution_data = calculate_contribution_returning_total_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        contribution_data = calculate_contribution_returning_total_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = ContributionReturningTotalPerCountryResponse(
@@ -1372,7 +1391,8 @@ async def get_total_contribution_per_country(
             raise HTTPException(status_code=400, detail=f"Number of weeks must be between 1 and 52")
         
         config = load_config(week=base_week)
-        contribution_data = calculate_total_contribution_per_country_for_weeks(base_week, num_weeks, config.raw_data_path)
+        data_path = config.data_root / "raw" / base_week
+        contribution_data = calculate_total_contribution_per_country_for_weeks(base_week, num_weeks, data_path)
         
         # Format response
         response = TotalContributionPerCountryResponse(
