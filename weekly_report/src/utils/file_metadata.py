@@ -65,21 +65,28 @@ def extract_file_metadata(file_path: Path, file_type: str) -> Dict[str, Any]:
         first_date = df[date_col].min().strftime('%Y-%m-%d')
         last_date = df[date_col].max().strftime('%Y-%m-%d')
         
-        # Get full row count (not just sample)
+        # Get full row count (not just sample) - use optimized counting
         logger.info(f"Counting rows in {file_path.name}")
         if file_path.suffix.lower() == '.xlsx':
+            # For Excel files, we need to read the full file
             full_df = pd.read_excel(file_path)
+            row_count = len(full_df)
         else:
-            # Try semicolon separator first
+            # For CSV files, count lines directly without loading into memory
+            # This is much faster for large files
             try:
-                full_df = pd.read_csv(file_path, sep=';')
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    row_count = sum(1 for line in f) - 1  # Subtract header
             except Exception:
-                # Try comma separator
+                # Fallback to pandas if line counting fails
                 try:
-                    full_df = pd.read_csv(file_path, quotechar='"')
+                    full_df = pd.read_csv(file_path, sep=';')
                 except Exception:
-                    full_df = pd.read_csv(file_path)
-        row_count = len(full_df)
+                    try:
+                        full_df = pd.read_csv(file_path, quotechar='"')
+                    except Exception:
+                        full_df = pd.read_csv(file_path)
+                row_count = len(full_df)
         
         return {
             "first_date": first_date,
