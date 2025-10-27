@@ -79,12 +79,14 @@ export default function Settings() {
     try {
       const response = await fetch(`http://localhost:8000/api/file-dimensions?week=${selectedWeek}`)
       if (!response.ok) {
-        throw new Error(`Failed to fetch dimensions: ${response.statusText}`)
+        console.warn(`Failed to fetch dimensions: ${response.statusText}`)
+        setDimensions({})
+        return
       }
       const data = await response.json()
       setDimensions(data)
     } catch (error) {
-      console.error('Failed to load dimensions:', error)
+      console.warn('Failed to load dimensions:', error)
       setDimensions({})
     }
   }
@@ -201,9 +203,9 @@ export default function Settings() {
                   fileTypeLabel={ft.label}
                   acceptedFormats={ft.formats}
                   currentWeek={selectedWeek}
-                  onUploadSuccess={() => {
-                    loadMetadata(true)
-                    loadDimensions()
+                  onUploadSuccess={async () => {
+                    await loadMetadata(true)
+                    await loadDimensions()
                   }}
                 />
                 
