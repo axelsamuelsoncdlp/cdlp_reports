@@ -47,6 +47,9 @@ def calculate_aov_returning_customers_per_country_for_week(qlik_df: pd.DataFrame
     
     logger.info(f"Total AOV for returning customers week {week_str}: Gross Revenue={total_gross_revenue}, Orders={total_orders}, AOV={total_aov}")
     
+    # Define main countries (these will NOT be included in ROW)
+    main_countries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
+    
     # Create result dict
     result = {
         'week': week_str,
@@ -56,6 +59,19 @@ def calculate_aov_returning_customers_per_country_for_week(qlik_df: pd.DataFrame
     # Add Total AOV first
     if total_orders > 0:
         result['countries']['Total'] = float(total_aov)
+    
+    # Calculate ROW AOV (all countries except the main 7)
+    row_gross_revenue = 0
+    row_orders = 0
+    for _, row in country_aov.iterrows():
+        country = row['Country']
+        if pd.notna(country) and country != '-' and country not in main_countries:
+            row_gross_revenue += row['Gross Revenue']
+            row_orders += row['Orders']
+    
+    if row_orders > 0:
+        row_aov = row_gross_revenue / row_orders
+        result['countries']['ROW'] = float(row_aov)
     
     # Add each country's AOV
     for _, row in country_aov.iterrows():
