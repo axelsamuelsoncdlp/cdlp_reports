@@ -144,6 +144,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
   const [baseWeek, setBaseWeekInternal] = useState<string>(DEFAULT_BASE_WEEK)
+  const [isDataReady, setIsDataReady] = useState(false)
   
   // Wrap setBaseWeek to also save to localStorage
   const setBaseWeek = useCallback((week: string) => {
@@ -208,10 +209,11 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setContribution_new_total_per_country(cached.contribution_new_total_per_country)
         setContribution_returning_per_country(cached.contribution_returning_per_country)
         setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
-        setTotal_contribution_per_country(cached.total_contribution_per_country)
-        return
-      }
+      setTotal_contribution_per_country(cached.total_contribution_per_country)
+      setIsDataReady(true)
+      return
     }
+  }
 
     setLoading(true)
 
@@ -569,6 +571,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       console.error('Error loading dashboard data:', err)
     } finally {
       setLoading(false)
+      setIsDataReady(true)
       // Clear progress after a short delay
       setTimeout(() => setLoadingProgress(null), 500)
     }
@@ -611,13 +614,14 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     }
   }, [])
   
+  // Load cached data on mount - only if user has previously selected a week
   useEffect(() => {
     // Only load if user has explicitly selected a week
     if (!hasUserSelectedWeek && !localStorage.getItem('selected_week')) {
       return // Skip loading until user selects a week
     }
     
-    // Only load if we don't have cached data already
+    // Only load cached data - never trigger API calls on mount
     const cached = getCachedData(baseWeek)
     if (cached) {
       // Load from cache immediately to avoid any delay
@@ -642,10 +646,11 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setContribution_returning_per_country(cached.contribution_returning_per_country)
       setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
       setTotal_contribution_per_country(cached.total_contribution_per_country)
+      setIsDataReady(true)
     } else {
-      loadAllData(baseWeek)
+      setIsDataReady(false)
     }
-  }, [baseWeek, hasUserSelectedWeek]) // Load when week changes or when user first selects week
+  }, [baseWeek, hasUserSelectedWeek]) // Only load from cache when week changes
 
   const value: DataCacheContextType = {
     periods,
@@ -676,7 +681,8 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     refreshData,
     clearCache,
     baseWeek: baseWeek,
-    setBaseWeek
+    setBaseWeek,
+    isDataReady
   }
 
   return <DataCacheContext.Provider value={value}>{children}</DataCacheContext.Provider>

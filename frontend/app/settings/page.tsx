@@ -89,33 +89,28 @@ export default function Settings() {
     }
   }
 
+  // Remove auto-load - metadata should only load when user clicks "Reload Metadata"
+  // Load cached metadata on mount if available
   useEffect(() => {
-    // Only load metadata if not already loaded for this week
     const cacheKey = `file_metadata_${selectedWeek}`
     const cached = localStorage.getItem(cacheKey)
     
-    if (!cached) {
-      // Reset metadata to show loading state
-      setMetadata(null)
-      loadMetadata()
-      loadDimensions()
-    } else {
+    if (cached) {
       try {
         const parsed = JSON.parse(cached)
         const cacheAge = Date.now() - parsed.timestamp
-        // Cache for 5 minutes
-        if (cacheAge < 5 * 60 * 1000) {
+        // Cache for 30 minutes
+        if (cacheAge < 30 * 60 * 1000) {
           setMetadata(parsed.data)
         } else {
-          setMetadata(null)
-          loadMetadata()
-          loadDimensions()
+          setMetadata({}) // Show empty state
         }
       } catch (err) {
         console.warn('Failed to load cached metadata:', err)
-        loadMetadata()
-        loadDimensions()
+        setMetadata({})
       }
+    } else {
+      setMetadata({}) // Show empty state
     }
   }, [selectedWeek])
 
