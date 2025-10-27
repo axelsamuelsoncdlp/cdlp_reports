@@ -28,16 +28,18 @@ def calculate_aov_new_customers_per_country_for_week(qlik_df: pd.DataFrame, week
             'countries': {}
         }
     
-    # Calculate AOV per country: Net Revenue / Number of unique orders
+    # Calculate AOV per country: Gross Revenue / Number of unique orders
+    # Using Gross Revenue instead of Net Revenue to avoid negative AOV from returns
     country_aov = new_customers_df.groupby('Country').agg({
-        'Net Revenue': 'sum',
+        'Gross Revenue': 'sum',
         'Order No': 'nunique'
     }).reset_index()
     
-    country_aov.columns = ['Country', 'Net Revenue', 'Orders']
+    country_aov.columns = ['Country', 'Gross Revenue', 'Orders']
     
-    # Calculate AOV: Net Revenue / Orders
-    country_aov['AOV'] = country_aov['Net Revenue'] / country_aov['Orders']
+    # Calculate AOV: Gross Revenue / Orders
+    # This ensures AOV is never negative (returns don't affect it negatively)
+    country_aov['AOV'] = country_aov['Gross Revenue'] / country_aov['Orders']
     country_aov['AOV'] = country_aov['AOV'].fillna(0)
     
     # Create result dict
