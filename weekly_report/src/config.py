@@ -55,8 +55,8 @@ class Config(BaseModel):
     
     @property
     def raw_data_path(self) -> Path:
-        """Path to raw data (not week-specific - uses single data directory)."""
-        return self.data_root / "raw"
+        """Path to raw data for the current week."""
+        return self.data_root / "raw" / self.week / self.week
     
     @property
     def curated_data_path(self) -> Path:

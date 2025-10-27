@@ -521,11 +521,11 @@ def calculate_table1_for_periods_with_ytd(periods: Dict[str, str], data_root: Pa
     # Get base week from periods
     base_week = periods['actual']
     
-    # Load all raw data ONCE (not week-specific)
-    latest_data_path = data_root / "raw"
+    # Load all raw data for the base week
+    latest_data_path = data_root / "raw" / base_week
     
     try:
-        logger.info("Loading all raw data sources ONCE...")
+        logger.info(f"Loading all raw data sources for week {base_week} from {latest_data_path}...")
         all_raw_data = load_all_raw_data(latest_data_path)
         logger.info("Successfully loaded all raw data")
     except Exception as e:
@@ -632,9 +632,9 @@ def load_data_for_period(period_week: str, data_root: Path) -> Dict[str, pd.Data
         logger.info(f"Loaded Qlik data: {data_sources['qlik'].shape}")
     except FileNotFoundError as e:
         logger.warning(f"Qlik data not found for {period_week}: {e}")
-        # Try to load from the latest available data and filter by date
+        # Try to load from the week-specific directory
         try:
-            latest_data_path = data_root / "raw"  # Use single data directory
+            latest_data_path = data_root / "raw" / period_week
             all_qlik_data = qlik.load_data(latest_data_path)
             logger.info(f"Loading from latest data and filtering for {period_week}")
             
@@ -665,9 +665,9 @@ def load_data_for_period(period_week: str, data_root: Path) -> Dict[str, pd.Data
         logger.info(f"Loaded Dema spend data: {data_sources['dema_spend'].shape}")
     except FileNotFoundError as e:
         logger.warning(f"Dema spend data not found for {period_week}: {e}")
-        # Try to load from latest and filter
+        # Try to load from week-specific directory
         try:
-            latest_data_path = data_root / "raw"
+            latest_data_path = data_root / "raw" / period_week
             all_dema_data = dema.load_data(latest_data_path)
             
             if 'Days' in all_dema_data.columns:
@@ -692,9 +692,9 @@ def load_data_for_period(period_week: str, data_root: Path) -> Dict[str, pd.Data
         logger.info(f"Loaded Dema GM2 data: {data_sources['dema_gm2'].shape}")
     except FileNotFoundError as e:
         logger.warning(f"Dema GM2 data not found for {period_week}: {e}")
-        # Try to load from latest and filter
+        # Try to load from week-specific directory
         try:
-            latest_data_path = data_root / "raw"
+            latest_data_path = data_root / "raw" / period_week
             all_dema_gm2_data = dema_gm2.load_data(latest_data_path)
             
             if 'Days' in all_dema_gm2_data.columns:
@@ -741,12 +741,14 @@ def calculate_table1_for_periods(
     
     logger.info(f"Calculating Table 1 metrics for {len(periods)} periods")
     
-    # OPTIMIZATION: Load all raw data ONCE
-    # Use the single data directory (not week-specific)
-    latest_data_path = data_root / "raw"
+    # Get base week from periods
+    base_week = periods['actual']
+    
+    # Load all raw data for the base week
+    latest_data_path = data_root / "raw" / base_week
     
     try:
-        logger.info("Loading all raw data sources ONCE for efficient reuse...")
+        logger.info(f"Loading all raw data sources for week {base_week} from {latest_data_path}...")
         all_raw_data = load_all_raw_data(latest_data_path)
         logger.info("Successfully loaded all raw data - now filtering for each period")
     except Exception as e:

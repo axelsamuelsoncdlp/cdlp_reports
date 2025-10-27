@@ -78,8 +78,10 @@ def calculate_online_kpis_for_weeks(base_week: str, num_weeks: int, data_root: P
     # Collect all weeks
     all_weeks = list(set(weeks_to_analyze + last_year_weeks))
     
-    # Load data once from the raw directory using cached loader
-    latest_data_path = data_root / "raw"  # Single directory, not week-specific
+    # Load data for the base week
+    base_week = weeks_to_analyze[0] if weeks_to_analyze else '2025-42'
+    latest_data_path = data_root / "raw" / base_week
+    
     qlik_df = pd.DataFrame()
     shopify_df = pd.DataFrame()
     dema_df = pd.DataFrame()
