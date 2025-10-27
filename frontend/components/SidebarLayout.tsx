@@ -87,8 +87,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   )}
                 </button>
                 
-                {!isCollapsed && isGeneralOpen && (
-                  <div className="ml-4 mt-1 space-y-1">
+                {(isCollapsed || isGeneralOpen) && (
+                  <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
                     <Link
                       href="/summary"
                       prefetch={true}
@@ -99,7 +99,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Summary
+                      {!isCollapsed && <span>Summary</span>}
                     </Link>
                     <Link
                       href="/top-markets"
@@ -111,7 +111,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconFileChart className="h-4 w-4" />
-                      Top Markets
+                      {!isCollapsed && <span>Top Markets</span>}
                     </Link>
                     <Link
                       href="/online-kpis"
@@ -123,7 +123,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconTrendingUp className="h-4 w-4" />
-                      Online KPIs
+                      {!isCollapsed && <span>Online KPIs</span>}
                     </Link>
                     <Link
                       href="/contribution"
@@ -135,7 +135,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconTrendingUp className="h-4 w-4" />
-                      Contribution
+                      {!isCollapsed && <span>Contribution</span>}
                     </Link>
                     <Link
                       href="/gender-sales"
@@ -147,7 +147,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Gender Sales
+                      {!isCollapsed && <span>Gender Sales</span>}
                     </Link>
                     <Link
                       href="/men-category-sales"
@@ -159,7 +159,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Men Category Sales
+                      {!isCollapsed && <span>Men Category Sales</span>}
                     </Link>
                     <Link
                       href="/women-category-sales"
@@ -171,7 +171,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Women Category Sales
+                      {!isCollapsed && <span>Women Category Sales</span>}
                     </Link>
                     <Link
                       href="/category-sales"
@@ -183,7 +183,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Category Sales
+                      {!isCollapsed && <span>Category Sales</span>}
                     </Link>
                     <Link
                       href="/products-new"
@@ -195,7 +195,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Products New
+                      {!isCollapsed && <span>Products New</span>}
                     </Link>
                     <Link
                       href="/products-gender"
@@ -207,7 +207,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Products Gender
+                      {!isCollapsed && <span>Products Gender</span>}
                     </Link>
                   </div>
                 )}
@@ -232,8 +232,8 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   )}
                 </button>
                 
-                {!isCollapsed && isMarketingOpen && (
-                  <div className="ml-4 mt-1 space-y-1">
+                {(isCollapsed || isMarketingOpen) && (
+                  <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
                     <Link
                       href="/sessions-per-country"
                       prefetch={true}
@@ -244,7 +244,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Sessions per Country
+                      {!isCollapsed && <span>Sessions per Country</span>}
                     </Link>
                     <Link
                       href="/conversion-per-country"
@@ -256,7 +256,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Conversion per Country
+                      {!isCollapsed && <span>Conversion per Country</span>}
                     </Link>
                     <Link
                       href="/new-customers-per-country"
@@ -268,7 +268,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      New Customers
+                      {!isCollapsed && <span>New Customers</span>}
                     </Link>
                     <Link
                       href="/returning-customers-per-country"
@@ -280,7 +280,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Returning Customers
+                      {!isCollapsed && <span>Returning Customers</span>}
                     </Link>
                     <Link
                       href="/aov-new-customers-per-country"
@@ -292,7 +292,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      AOV New Customers
+                      {!isCollapsed && <span>AOV New Customers</span>}
                     </Link>
                     <Link
                       href="/aov-returning-customers-per-country"
@@ -304,7 +304,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      AOV Returning Customers
+                      {!isCollapsed && <span>AOV Returning Customers</span>}
                     </Link>
                     <Link
                       href="/marketing-spend-per-country"
@@ -316,7 +316,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Marketing Spend
+                      {!isCollapsed && <span>Marketing Spend</span>}
                     </Link>
                     <Link
                       href="/ncac-per-country"
@@ -328,7 +328,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      nCAC
+                      {!isCollapsed && <span>nCAC</span>}
                     </Link>
                     <Link
                       href="/contribution-new-per-country"
@@ -340,7 +340,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Contribution New Customer
+                      {!isCollapsed && <span>Contribution New Customer</span>}
                     </Link>
                     <Link
                       href="/contribution-new-total-per-country"
@@ -352,7 +352,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Contribution New Total
+                      {!isCollapsed && <span>Contribution New Total</span>}
                     </Link>
                     <Link
                       href="/contribution-returning-per-country"
@@ -364,7 +364,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Contribution Returning Customer
+                      {!isCollapsed && <span>Contribution Returning Customer</span>}
                     </Link>
                     <Link
                       href="/contribution-returning-total-per-country"
@@ -376,7 +376,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Contribution Returning Total
+                      {!isCollapsed && <span>Contribution Returning Total</span>}
                     </Link>
                     <Link
                       href="/total-contribution-per-country"
@@ -388,7 +388,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       }`}
                     >
                       <IconChartBar className="h-4 w-4" />
-                      Total Contribution
+                      {!isCollapsed && <span>Total Contribution</span>}
                     </Link>
                   </div>
                 )}
