@@ -45,13 +45,17 @@ def calculate_aov_new_customers_per_country_for_week(qlik_df: pd.DataFrame, week
     total_orders = new_customers_df['Order No'].nunique()
     total_aov = total_gross_revenue / total_orders if total_orders > 0 else 0
     
+    logger.info(f"Total AOV for new customers week {week_str}: Gross Revenue={total_gross_revenue}, Orders={total_orders}, AOV={total_aov}")
+    
     # Create result dict
     result = {
         'week': week_str,
-        'countries': {
-            'Total': float(total_aov)
-        }
+        'countries': {}
     }
+    
+    # Add Total AOV first
+    if total_orders > 0:
+        result['countries']['Total'] = float(total_aov)
     
     # Add each country's AOV
     for _, row in country_aov.iterrows():
