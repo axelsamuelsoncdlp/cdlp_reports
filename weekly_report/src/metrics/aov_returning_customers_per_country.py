@@ -40,10 +40,17 @@ def calculate_aov_returning_customers_per_country_for_week(qlik_df: pd.DataFrame
     country_aov['AOV'] = country_aov['Gross Revenue'] / country_aov['Orders']
     country_aov['AOV'] = country_aov['AOV'].fillna(0)
     
+    # Calculate Total AOV across all countries
+    total_gross_revenue = returning_customers_df['Gross Revenue'].sum()
+    total_orders = returning_customers_df['Order No'].nunique()
+    total_aov = total_gross_revenue / total_orders if total_orders > 0 else 0
+    
     # Create result dict
     result = {
         'week': week_str,
-        'countries': {}
+        'countries': {
+            'Total': float(total_aov)
+        }
     }
     
     # Add each country's AOV
