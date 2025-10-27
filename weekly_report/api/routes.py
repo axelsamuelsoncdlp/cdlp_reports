@@ -1619,7 +1619,7 @@ async def get_file_dimensions(week: str = Query(...)):
 
 @app.get("/api/file-metadata")
 async def get_file_metadata(week: str = Query(...)):
-    """Get metadata for all data files in a specific week."""
+    """Get metadata for all data files in a specific week - only check if files exist."""
     try:
         if not validate_iso_week(week):
             raise HTTPException(status_code=400, detail="Invalid ISO week format")
@@ -1637,11 +1637,10 @@ async def get_file_metadata(week: str = Query(...)):
                 if files:
                     # Get the most recently modified file
                     latest_file = max(files, key=lambda f: f.stat().st_mtime)
-                    file_info = extract_file_metadata(latest_file, file_type)
+                    # Only return basic file info - don't read the entire file
                     metadata[file_type] = {
                         "filename": latest_file.name,
-                        "uploaded_at": datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat(),
-                        **file_info
+                        "uploaded_at": datetime.fromtimestamp(latest_file.stat().st_mtime).isoformat()
                     }
         
         return metadata

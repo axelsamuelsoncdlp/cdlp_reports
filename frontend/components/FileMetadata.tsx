@@ -30,13 +30,15 @@ export default function FileMetadata({
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-700">
-          <Calendar className="h-4 w-4 text-gray-500" />
-          <span>
-            Data: {firstDate} → {lastDate}
-            {rowCount && <span className="text-gray-500 ml-2">({rowCount.toLocaleString()} rows)</span>}
-          </span>
-        </div>
+        {firstDate && lastDate && (
+          <div className="flex items-center gap-2 text-sm text-gray-700">
+            <Calendar className="h-4 w-4 text-gray-500" />
+            <span>
+              Data: {firstDate} → {lastDate}
+              {rowCount && <span className="text-gray-500 ml-2">({rowCount.toLocaleString()} rows)</span>}
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
