@@ -1,6 +1,6 @@
 'use client'
 
-import { useAOVReturningCustomersPerCountry } from '@/contexts/DataCacheContext'
+import { useDataCache } from '@/contexts/DataCacheContext'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart'
 import { CartesianGrid, LabelList, Line, LineChart, XAxis } from 'recharts'
@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Loader2 } from 'lucide-react'
 
 export default function AOVReturningCustomersPerCountry() {
-  const { aov_returning_customers_per_country } = useAOVReturningCustomersPerCountry()
+  const { aov_returning_customers_per_country } = useDataCache()
 
   // Define country order and labels
   const countryOrder = [
@@ -71,21 +71,12 @@ export default function AOVReturningCustomersPerCountry() {
                 lastYearValue = week.last_year.countries['Total'] || 0
               }
             } else if (country.key === 'ROW') {
-              // Calculate ROW (Rest of World) - all countries except the main ones
-              const mainCountries = ['United States', 'United Kingdom', 'Sweden', 'Germany', 'Australia', 'Canada', 'France']
-              currentValue = Object.entries(week.countries).reduce((sum: number, [countryName, customers]: [string, any]) => {
-                if (!mainCountries.includes(countryName)) {
-                  return sum + customers
-                }
-                return sum
-              }, 0)
+              // ROW should NOT be included in countries dict since it's not a real country
+              // We need to extract it from the data structure if it exists
+              // Check if 'ROW' exists as a key in the countries dict
+              currentValue = week.countries['ROW'] || 0
               if (week.last_year) {
-                lastYearValue = Object.entries(week.last_year.countries).reduce((sum: number, [countryName, customers]: [string, any]) => {
-                  if (!mainCountries.includes(countryName)) {
-                    return sum + customers
-                  }
-                  return sum
-                }, 0)
+                lastYearValue = week.last_year.countries['ROW'] || 0
               }
             } else {
               // Specific country
