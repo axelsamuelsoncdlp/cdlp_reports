@@ -1,27 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import ProductsGenderTable from '@/components/ProductsGenderTable'
 import { getPeriods } from '@/lib/api'
 import { Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useDataCache } from '@/contexts/DataCacheContext'
 
 export default function ProductsGender() {
-  const [selectedWeek, setSelectedWeek] = useState('2025-42')
+  const { baseWeek } = useDataCache()
   const [periods, setPeriods] = useState(null)
 
-  // Load periods on mount
+  // Load periods on mount and when baseWeek changes
   useEffect(() => {
     const loadPeriods = async () => {
+      if (!baseWeek) return
       try {
-        const data = await getPeriods(selectedWeek)
+        const data = await getPeriods(baseWeek)
         setPeriods(data)
       } catch (err) {
         console.error('Failed to load periods:', err)
       }
     }
     loadPeriods()
-  }, [selectedWeek])
+  }, [baseWeek])
 
   return (
     <div className="space-y-8">
@@ -29,11 +31,11 @@ export default function ProductsGender() {
         <div className="grid grid-cols-2 gap-6">
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Products Men</h2>
-            <ProductsGenderTable baseWeek={selectedWeek} genderFilter="men" />
+            <ProductsGenderTable baseWeek={baseWeek} genderFilter="men" />
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Products Women</h2>
-            <ProductsGenderTable baseWeek={selectedWeek} genderFilter="women" />
+            <ProductsGenderTable baseWeek={baseWeek} genderFilter="women" />
           </div>
         </div>
       ) : (
