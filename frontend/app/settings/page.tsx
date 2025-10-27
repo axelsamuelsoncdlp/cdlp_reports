@@ -91,29 +91,30 @@ export default function Settings() {
     }
   }
 
-  // Remove auto-load - metadata should only load when user clicks "Reload Metadata"
-  // Load cached metadata on mount if available
+  // Load file metadata when week changes - check actual files in backend
   useEffect(() => {
-    const cacheKey = `file_metadata_${selectedWeek}`
-    const cached = localStorage.getItem(cacheKey)
-    
-    if (cached) {
+    const loadFileMetadata = async () => {
       try {
-        const parsed = JSON.parse(cached)
-        const cacheAge = Date.now() - parsed.timestamp
-        // Cache for 30 minutes
-        if (cacheAge < 30 * 60 * 1000) {
-          setMetadata(parsed.data)
+        const response = await fetch(`http://localhost:8000/api/file-metadata?week=${selectedWeek}`)
+        if (response.ok) {
+          const data = await response.json()
+          setMetadata(data)
+          
+          // Cache the result
+          const cacheKey = `file_metadata_${selectedWeek}`
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data,
+            timestamp: Date.now()
+          }))
         } else {
-          setMetadata({}) // Show empty state
+          setMetadata({})
         }
-      } catch (err) {
-        console.warn('Failed to load cached metadata:', err)
+      } catch (error) {
+        console.warn('Failed to load file metadata:', error)
         setMetadata({})
       }
-    } else {
-      setMetadata({}) // Show empty state
     }
+    loadFileMetadata()
   }, [selectedWeek])
 
   const fileTypes = [
