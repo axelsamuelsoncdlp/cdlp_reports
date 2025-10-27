@@ -74,5 +74,13 @@ def load_csv_files(source_path: Path, source_name: str) -> pd.DataFrame:
 def load_data(raw_data_path: Path) -> pd.DataFrame:
     """Load Shopify data from CSV files."""
     source_path = raw_data_path / "shopify"
+    
+    if not source_path.exists():
+        # Fall back to old structure (data/raw/shopify/)
+        fallback_path = raw_data_path.parent / "shopify"
+        if fallback_path.exists():
+            logger.info(f"Using fallback path: {fallback_path}")
+            return load_csv_files(fallback_path, "shopify")
+    
     return load_csv_files(source_path, "shopify")
 

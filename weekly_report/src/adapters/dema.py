@@ -94,4 +94,12 @@ def load_csv_files(source_path: Path, source_name: str) -> pd.DataFrame:
 def load_data(raw_data_path: Path) -> pd.DataFrame:
     """Load Dema spend data from CSV files."""
     source_path = raw_data_path / "dema_spend"
+    
+    if not source_path.exists():
+        # Fall back to old structure (data/raw/dema_spend/)
+        fallback_path = raw_data_path.parent / "dema_spend"
+        if fallback_path.exists():
+            logger.info(f"Using fallback path: {fallback_path}")
+            return load_csv_files(fallback_path, "dema_spend")
+    
     return load_csv_files(source_path, "dema_spend")

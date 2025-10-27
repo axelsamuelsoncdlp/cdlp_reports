@@ -90,6 +90,14 @@ def load_csv_files(source_path: Path, source_name: str) -> pd.DataFrame:
 
 def load_data(raw_data_path: Path) -> pd.DataFrame:
     """Load Qlik data from CSV/Excel files."""
-    # Use qlik directory directly (not week-specific)
+    # Try week-specific path first (data/raw/{week}/qlik/)
     source_path = raw_data_path / "qlik"
+    
+    if not source_path.exists():
+        # Fall back to old structure (data/raw/qlik/)
+        fallback_path = raw_data_path.parent / "qlik"
+        if fallback_path.exists():
+            logger.info(f"Using fallback path: {fallback_path}")
+            return load_csv_files(fallback_path, "qlik")
+    
     return load_csv_files(source_path, "qlik")
