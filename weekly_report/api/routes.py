@@ -1411,7 +1411,7 @@ async def get_batch_all_metrics(
         config = load_config(week=base_week)
         
         logger.info(f"Starting batch calculation for {base_week} with {num_weeks} weeks")
-        all_metrics = calculate_all_metrics(base_week, config.raw_data_path, num_weeks)
+        all_metrics = calculate_all_metrics(base_week, config.data_root, num_weeks)
         
         response = BatchMetricsResponse(**all_metrics)
         return response
