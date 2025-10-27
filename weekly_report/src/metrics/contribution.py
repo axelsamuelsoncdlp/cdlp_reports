@@ -51,8 +51,7 @@ def calculate_contribution_for_weeks(base_week: str, num_weeks: int, data_root: 
     
     logger.info(f"Calculating Contribution metrics for weeks: {weeks_to_analyze}")
     
-    # Load data for the base week
-    base_week = weeks_to_analyze[0] if weeks_to_analyze else '2025-42'
+    # Load data from the requested base_week (not the first of weeks_to_analyze)
     latest_data_path = data_root / "raw" / base_week
     
     qlik_df = pd.DataFrame()

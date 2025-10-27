@@ -59,12 +59,11 @@ def calculate_top_markets_for_weeks(base_week: str, num_weeks: int, data_root: P
     logger.info(f"Analyzing weeks: {weeks_to_analyze}")
     logger.info(f"Last year weeks: {last_year_weeks}")
     
-    # Load all raw data for the base week
-    base_week = weeks_to_analyze[0] if weeks_to_analyze else '2025-42'
+    # Load all raw data from the requested base_week (not the first of weeks_to_analyze)
     latest_data_path = data_root / "raw" / base_week
     
     try:
-        logger.info(f"Loading raw data from {latest_data_path} for base week {base_week}")
+        logger.info(f"Loading raw data from {latest_data_path} for requested week {base_week}")
         all_raw_data = load_all_raw_data(latest_data_path)
     except Exception as e:
         logger.error(f"Failed to load raw data: {e}")
