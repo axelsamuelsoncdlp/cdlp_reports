@@ -12,6 +12,7 @@ import shutil
 from datetime import datetime
 from loguru import logger
 import pandas as pd
+import pandas as pd
 
 from weekly_report.src.periods.calculator import get_periods_for_week, get_week_date_range, get_ytd_periods_for_week, validate_iso_week
 from weekly_report.src.metrics.table1 import calculate_table1_for_periods, calculate_table1_for_periods_with_ytd
@@ -1687,12 +1688,23 @@ async def get_budget_data(week: str = Query(...)):
         if budget_df.empty:
             return {"error": "Budget file is empty"}
         
+        # Convert sample data to dict, handling NaN and infinite values
+        sample_dicts = []
+        for _, row in budget_df.head(5).iterrows():
+            row_dict = {}
+            for col, val in row.items():
+                if pd.isna(val) or pd.isinf(val):
+                    row_dict[col] = None
+                else:
+                    row_dict[col] = str(val) if isinstance(val, (int, float)) else val
+            sample_dicts.append(row_dict)
+        
         # Return basic structure
         return {
             "week": week,
             "columns": budget_df.columns.tolist(),
             "row_count": len(budget_df),
-            "sample_data": budget_df.head(5).to_dict('records')
+            "sample_data": sample_dicts
         }
         
     except FileNotFoundError:
