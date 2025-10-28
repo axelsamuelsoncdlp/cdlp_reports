@@ -8,6 +8,7 @@ import { IconChartBar, IconFileChart, IconTrendingUp, IconSettings, IconChevronD
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [isWeeklyReportsOpen, setIsWeeklyReportsOpen] = useState(true)
   const [isGeneralOpen, setIsGeneralOpen] = useState(true)
   const [isMarketingOpen, setIsMarketingOpen] = useState(true)
 
@@ -65,8 +66,38 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
 
           <div className="flex-1 overflow-y-auto py-4">
             <nav className="flex flex-col space-y-1">
-              {/* General Dropdown */}
+              {/* Weekly Reports Dropdown */}
               <div>
+                <button
+                  onClick={() => setIsWeeklyReportsOpen(!isWeeklyReportsOpen)}
+                  className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive('/summary') || isActive('/top-markets') || isActive('/online-kpis') || 
+                    isActive('/contribution') || isActive('/gender-sales') || isActive('/men-category-sales') || 
+                    isActive('/women-category-sales') || isActive('/category-sales') || isActive('/products-new') || 
+                    isActive('/products-gender') || isActive('/sessions-per-country') || isActive('/conversion-per-country') || 
+                    isActive('/new-customers-per-country') || isActive('/returning-customers-per-country') || 
+                    isActive('/aov-new-customers-per-country') || isActive('/aov-returning-customers-per-country') || 
+                    isActive('/marketing-spend-per-country') || isActive('/ncac-per-country') || 
+                    isActive('/contribution-new-per-country') || isActive('/contribution-new-total-per-country') || 
+                    isActive('/contribution-returning-per-country') || isActive('/contribution-returning-total-per-country') || 
+                    isActive('/total-contribution-per-country')
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <IconFileChart className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">Weekly Reports</span>
+                      {isWeeklyReportsOpen ? <IconChevronDown className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
+                    </>
+                  )}
+                </button>
+                
+                {(isCollapsed || isWeeklyReportsOpen) && (
+                  <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
+                    {/* General Subgroup */}
+                    <div>
                 <button
                   onClick={() => setIsGeneralOpen(!isGeneralOpen)}
                   className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -211,10 +242,29 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                     </Link>
                   </div>
                 )}
-              </div>
+                    </div>
 
-              {/* Marketing Dropdown */}
-              <div>
+                    {/* Markets Subgroup */}
+                    <div>
+                <button
+                  onClick={() => setIsMarketingOpen(!isMarketingOpen)}
+                  className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                    isActive('/sessions-per-country') || isActive('/conversion-per-country') || isActive('/new-customers-per-country') || isActive('/returning-customers-per-country') || isActive('/aov-new-customers-per-country') || isActive('/aov-returning-customers-per-country') || isActive('/marketing-spend-per-country') || isActive('/ncac-per-country') || isActive('/contribution-new-per-country')
+                      ? 'bg-gray-200 text-gray-900'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  <IconTrendingUp className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && (
+                    <>
+                      <span className="flex-1 text-left">Markets</span>
+                      {isMarketingOpen ? <IconChevronDown className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
+                    </>
+                  )}
+                </button>
+                
+                {(isCollapsed || isMarketingOpen) && (
+                  <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
                 <button
                   onClick={() => setIsMarketingOpen(!isMarketingOpen)}
                   className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
@@ -390,6 +440,9 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                       <IconChartBar className="h-4 w-4" />
                       {!isCollapsed && <span>Total Contribution</span>}
                     </Link>
+                  </div>
+                )}
+                    </div>
                   </div>
                 )}
               </div>
