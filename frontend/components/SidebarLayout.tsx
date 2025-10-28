@@ -39,6 +39,7 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
       '/contribution-returning-per-country': { title: 'Contribution Returning Customer per Country', subtitle: '(SEK)' },
       '/contribution-returning-total-per-country': { title: 'Contribution Returning Total per Country', subtitle: '(SEK \'000)' },
       '/total-contribution-per-country': { title: 'Total Contribution per Country', subtitle: '(SEK \'000)' },
+      '/budget': { title: 'Budget', subtitle: 'Budget vs actual performance' },
       '/settings': { title: 'Settings', subtitle: 'Configure data sources and file uploads' },
     }
     
@@ -427,6 +428,20 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                   </div>
                 )}
               </div>
+
+              {/* Budget */}
+              <Link
+                href="/budget"
+                prefetch={true}
+                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  isActive('/budget')
+                    ? 'bg-gray-200 text-gray-900'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
+              >
+                <IconFileChart className="h-4 w-4" />
+                {!isCollapsed && <span>Budget</span>}
+              </Link>
 
               {/* Settings */}
               <Link
