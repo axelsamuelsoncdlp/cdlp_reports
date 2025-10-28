@@ -121,7 +121,8 @@ export default function Settings() {
     { type: 'qlik', label: 'Qlik Sales Data', formats: '.xlsx,.csv' },
     { type: 'dema_spend', label: 'DEMA Marketing Spend', formats: '.csv' },
     { type: 'dema_gm2', label: 'DEMA GM2 Data', formats: '.csv' },
-    { type: 'shopify', label: 'Shopify Sessions Data', formats: '.csv' }
+    { type: 'shopify', label: 'Shopify Sessions Data', formats: '.csv' },
+    { type: 'budget', label: 'Budget Data', formats: '.csv' }
   ]
 
   return (
