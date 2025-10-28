@@ -265,25 +265,6 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
                 
                 {(isCollapsed || isMarketingOpen) && (
                   <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
-                <button
-                  onClick={() => setIsMarketingOpen(!isMarketingOpen)}
-                  className={`w-full flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors ${
-                    isActive('/sessions-per-country') || isActive('/conversion-per-country') || isActive('/new-customers-per-country') || isActive('/returning-customers-per-country') || isActive('/aov-new-customers-per-country') || isActive('/aov-returning-customers-per-country') || isActive('/marketing-spend-per-country') || isActive('/ncac-per-country') || isActive('/contribution-new-per-country')
-                      ? 'bg-gray-200 text-gray-900'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  <IconTrendingUp className="h-4 w-4 flex-shrink-0" />
-                  {!isCollapsed && (
-                    <>
-                      <span className="flex-1 text-left">Markets</span>
-                      {isMarketingOpen ? <IconChevronDown className="h-4 w-4" /> : <IconChevronRight className="h-4 w-4" />}
-                    </>
-                  )}
-                </button>
-                
-                {(isCollapsed || isMarketingOpen) && (
-                  <div className={`${!isCollapsed ? 'ml-4 mt-1' : ''} space-y-1`}>
                     <Link
                       href="/sessions-per-country"
                       prefetch={true}
