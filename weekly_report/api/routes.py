@@ -1692,8 +1692,12 @@ async def get_budget_data(week: str = Query(...)):
         sample_dicts = []
         for _, row in budget_df.head(5).iterrows():
             row_dict = {}
-            for col, val in row.items():
-                if pd.isna(val) or pd.isinf(val):
+                for col, val in row.items():
+                # Check for NaN
+                if pd.isna(val):
+                    row_dict[col] = None
+                # Check for infinite values using math
+                elif isinstance(val, float) and (val == float('inf') or val == float('-inf')):
                     row_dict[col] = None
                 else:
                     row_dict[col] = str(val) if isinstance(val, (int, float)) else val
