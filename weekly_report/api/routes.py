@@ -1667,6 +1667,41 @@ async def get_file_metadata(week: str = Query(...)):
         raise HTTPException(status_code=500, detail="Failed to get file metadata")
 
 
+@app.get("/api/budget-data")
+async def get_budget_data(week: str = Query(...)):
+    """Get budget data for a specific week."""
+    try:
+        if not validate_iso_week(week):
+            raise HTTPException(status_code=400, detail="Invalid ISO week format")
+        
+        config = load_config(week=week)
+        budget_path = config.raw_data_path / "budget"
+        
+        if not budget_path.exists():
+            return {"error": "No budget data available for this week"}
+        
+        # Load budget data
+        from weekly_report.src.adapters.budget import load_data
+        budget_df = load_data(config.raw_data_path)
+        
+        if budget_df.empty:
+            return {"error": "Budget file is empty"}
+        
+        # Return basic structure
+        return {
+            "week": week,
+            "columns": budget_df.columns.tolist(),
+            "row_count": len(budget_df),
+            "sample_data": budget_df.head(5).to_dict('records')
+        }
+        
+    except FileNotFoundError:
+        return {"error": "No budget data found"}
+    except Exception as e:
+        logger.error(f"Error loading budget data: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to load budget data: {str(e)}")
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
