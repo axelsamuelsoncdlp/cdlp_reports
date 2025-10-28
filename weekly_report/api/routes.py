@@ -1560,6 +1560,21 @@ def validate_file_dimensions(file_path: Path, file_type: str) -> Dict[str, Any]:
             
             result["columns"] = df.columns.tolist()
             result["has_country"] = any("country" in col.lower() for col in df.columns)
+        
+        elif file_type == "budget":
+            # Budget files don't need country dimension - they use Market instead
+            try:
+                df = pd.read_csv(file_path, sep=',', encoding='utf-8', nrows=1, quotechar='"')
+            except:
+                try:
+                    df = pd.read_csv(file_path, sep=';', encoding='utf-8', nrows=1, quotechar='"')
+                except:
+                    df = pd.DataFrame()
+            
+            df.columns = df.columns.str.strip().str.replace('"', '')
+            result["columns"] = df.columns.tolist()
+            # Check for Market dimension instead of Country
+            result["has_country"] = any("market" in col.lower() for col in df.columns)
     
     except Exception as e:
         logger.error(f"Error validating dimensions for {file_path}: {e}")
