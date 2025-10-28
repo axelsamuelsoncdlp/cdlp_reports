@@ -1461,7 +1461,7 @@ async def upload_file(
             raise HTTPException(status_code=400, detail="Invalid ISO week format")
         
         # Validate file_type
-        allowed_types = ["qlik", "dema_spend", "dema_gm2", "shopify"]
+        allowed_types = ["qlik", "dema_spend", "dema_gm2", "shopify", "budget"]
         if file_type not in allowed_types:
             raise HTTPException(status_code=400, detail=f"Invalid file type. Must be one of {allowed_types}")
         
@@ -1469,7 +1469,7 @@ async def upload_file(
         file_extension = Path(file.filename).suffix.lower()
         if file_type == "qlik" and file_extension not in ['.xlsx', '.csv']:
             raise HTTPException(status_code=400, detail="Qlik file must be .xlsx or .csv")
-        if file_type in ["dema_spend", "dema_gm2", "shopify"] and file_extension != '.csv':
+        if file_type in ["dema_spend", "dema_gm2", "shopify", "budget"] and file_extension != '.csv':
             raise HTTPException(status_code=400, detail=f"{file_type} file must be .csv")
         
         # Create target directory
@@ -1580,7 +1580,7 @@ async def get_file_dimensions(week: str = Query(...)):
         result = {}
         
         # Check each file type
-        for file_type in ["qlik", "dema_spend", "dema_gm2", "shopify"]:
+        for file_type in ["qlik", "dema_spend", "dema_gm2", "shopify", "budget"]:
             type_path = raw_path / file_type
             if type_path.exists():
                 files = list(type_path.glob("*.*"))
