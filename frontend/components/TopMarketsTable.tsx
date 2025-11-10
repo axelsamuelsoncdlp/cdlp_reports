@@ -6,9 +6,10 @@ import { Loader2 } from 'lucide-react'
 
 interface TopMarketsTableProps {
   baseWeek: string
+  isPdfMode?: boolean
 }
 
-export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
+export default function TopMarketsTable({ baseWeek, isPdfMode = false }: TopMarketsTableProps) {
   const { markets: marketsData } = useMarkets()
 
   const formatValue = (value: number): string => {
@@ -49,7 +50,26 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
     return `W${parts[1]}`
   }
 
-  if (!marketsData || !marketsData.markets.length) {
+  // Normalize markets structure - handle both { markets: [...] } and direct array
+  let markets: any[] = []
+  let period_info: any = null
+  
+  if (marketsData) {
+    if (Array.isArray(marketsData)) {
+      // Structure: direct array
+      markets = marketsData
+    } else if (marketsData.markets && Array.isArray(marketsData.markets)) {
+      // Structure: { markets: [...], period_info: {...} }
+      markets = marketsData.markets
+      period_info = marketsData.period_info
+    } else if (marketsData.markets && typeof marketsData.markets === 'object') {
+      // Structure: { markets: {...} } - might be an object instead of array
+      markets = Object.values(marketsData.markets) as any[]
+      period_info = marketsData.period_info
+    }
+  }
+
+  if (!markets || markets.length === 0) {
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
@@ -65,8 +85,6 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
       </div>
     )
   }
-
-  const { markets, period_info } = marketsData
   const allWeekKeys = Object.keys(markets[0].weeks).sort()
   
   // Filter to only show 2025 weeks (current year)
@@ -91,41 +109,41 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
   console.log('🔍 Last Year Weeks:', lastYearWeeks)
 
   return (
-    <div className="bg-gray-50 rounded-lg overflow-hidden overflow-x-auto">
+    <div className={`bg-gray-50 rounded-lg overflow-hidden overflow-x-auto ${isPdfMode ? 'rounded-sm' : ''} ${isPdfMode ? 'break-inside-avoid' : ''}`}>
       {/* Markets table */}
-      <table className="w-full text-xs">
+      <table className={`w-full ${isPdfMode ? 'text-[6pt]' : 'text-xs'} ${isPdfMode ? 'break-inside-avoid' : ''}`}>
         <thead>
           <tr className="bg-gray-200 border-b">
-            <th className="text-left py-2 px-2 font-medium text-gray-900" rowSpan={3}>Country</th>
-            <th className="text-center py-2 px-2 font-medium text-gray-900 bg-gray-200" colSpan={9}>
-              Latest Week: {period_info.latest_dates}
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-left font-medium text-gray-900`} rowSpan={3}>Country</th>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-center font-medium text-gray-900 bg-gray-200`} colSpan={9}>
+              Latest Week: {period_info?.latest_dates || 'N/A'}
             </th>
-            <th className="text-center py-2 px-2 font-medium text-gray-900 bg-yellow-100" colSpan={9}>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-center font-medium text-gray-900 bg-yellow-100`} colSpan={9}>
               Y/Y GROWTH%
             </th>
-            <th className="text-center py-2 px-2 font-medium text-gray-900 bg-green-100" colSpan={9}>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-center font-medium text-gray-900 bg-green-100`} colSpan={9}>
               SoB
             </th>
           </tr>
           <tr className="bg-gray-200 border-b">
             {weekKeys.map((week) => (
-              <th key={week} className="text-right py-1 px-2 font-medium text-gray-900" rowSpan={2}>
+              <th key={week} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900`} rowSpan={2}>
                 {getWeekNumber(week)}
               </th>
             ))}
-            <th className="text-right py-1 px-2 font-medium text-gray-900 bg-blue-100" rowSpan={2}>Avg</th>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900 bg-blue-100`} rowSpan={2}>Avg</th>
             {weekKeys.map((week) => (
-              <th key={`yoy-${week}`} className="text-right py-1 px-2 font-medium text-gray-900 bg-yellow-50" rowSpan={2}>
+              <th key={`yoy-${week}`} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900 bg-yellow-50`} rowSpan={2}>
                 {getWeekNumber(week)}
               </th>
             ))}
-            <th className="text-right py-1 px-2 font-medium text-gray-900 bg-yellow-50" rowSpan={2}>Avg</th>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900 bg-yellow-50`} rowSpan={2}>Avg</th>
             {weekKeys.map((week) => (
-              <th key={`sob-${week}`} className="text-right py-1 px-2 font-medium text-gray-900 bg-green-50" rowSpan={2}>
+              <th key={`sob-${week}`} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900 bg-green-50`} rowSpan={2}>
                 {getWeekNumber(week)}
               </th>
             ))}
-            <th className="text-right py-1 px-2 font-medium text-gray-900 bg-green-50" rowSpan={2}>Avg</th>
+            <th className={`${isPdfMode ? 'py-0 px-0.5' : 'py-1 px-2'} text-right font-medium text-gray-900 bg-green-50`} rowSpan={2}>Avg</th>
           </tr>
         </thead>
         <tbody>
@@ -136,15 +154,15 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
             
             return (
               <tr key={index} className={`border-b border-gray-200 last:border-b-0 ${bgClass}`}>
-                <td className={`py-2 px-2 font-medium text-gray-900 ${isTotal ? 'font-bold' : ''}`}>
+                <td className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} font-medium text-gray-900 ${isTotal ? 'font-bold' : ''}`}>
                   {market.country}
                 </td>
                 {weekKeys.map((week) => (
-                  <td key={week} className="py-2 px-2 text-right text-gray-700">
+                  <td key={week} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 ${isPdfMode ? 'tabular-nums' : ''}`}>
                     {formatValue(market.weeks[week] || 0)}
                   </td>
                 ))}
-                <td className="py-2 px-2 text-right text-gray-700 bg-blue-50 font-medium">
+                <td className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 bg-blue-50 font-medium ${isPdfMode ? 'tabular-nums' : ''}`}>
                   {formatValue(market.average)}
                 </td>
                 {weekKeys.map((week, weekIndex) => {
@@ -153,27 +171,14 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
                   const lastYearValue = market.weeks[lastYearWeek] || 0
                   const yoY = calculateYoY(currentValue, lastYearValue)
                   
-                  // Debug for first market
-                  if (index === 0 && weekIndex === 0) {
-                    console.log('🔍 YoY Calculation Debug:', {
-                      week,
-                      lastYearWeek,
-                      currentValue,
-                      lastYearValue,
-                      yoY,
-                      hasLastYearData: lastYearWeek in market.weeks
-                    })
-                  }
-                  
                   return (
-                    <td key={`yoy-${week}`} className="py-2 px-2 text-right text-gray-700 bg-yellow-50">
+                    <td key={`yoy-${week}`} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 bg-yellow-50 ${isPdfMode ? 'tabular-nums' : ''}`}>
                       {formatYoY(yoY)}
                     </td>
                   )
                 })}
-                <td className="py-2 px-2 text-right text-gray-700 bg-yellow-50 font-medium">
+                <td className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 bg-yellow-50 font-medium ${isPdfMode ? 'tabular-nums' : ''}`}>
                   {(() => {
-                    // Calculate average YoY
                     let totalYoY = 0
                     let validWeeks = 0
                     weekKeys.forEach((week, weekIndex) => {
@@ -191,29 +196,23 @@ export default function TopMarketsTable({ baseWeek }: TopMarketsTableProps) {
                   })()}
                 </td>
                 {weekKeys.map((week) => {
-                  // Find total value for this week
                   const totalRow = markets.find(m => m.country === 'Total')
                   const totalValue = totalRow?.weeks[week] || 0
                   const marketValue = market.weeks[week] || 0
-                  
-                  // For Total row, show 100%, otherwise calculate SoB
                   const sob = isTotal ? 100 : calculateSoB(marketValue, totalValue)
-                  
+
                   return (
-                    <td key={`sob-${week}`} className="py-2 px-2 text-right text-gray-700 bg-green-50">
+                    <td key={`sob-${week}`} className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 bg-green-50 ${isPdfMode ? 'tabular-nums' : ''}`}>
                       {formatSoB(sob)}
                     </td>
                   )
                 })}
-                <td className="py-2 px-2 text-right text-gray-700 bg-green-50 font-medium">
+                <td className={`${isPdfMode ? 'py-0 px-0.5' : 'py-2 px-2'} text-right text-gray-700 bg-green-50 font-medium ${isPdfMode ? 'tabular-nums' : ''}`}>
                   {(() => {
-                    // For Total row, show 100%, otherwise calculate average SoB
                     if (isTotal) {
                       return formatSoB(100)
                     }
                     
-                    // Calculate average SoB by averaging market share first, then converting to percentage
-                    // This ensures the sum of all markets' avg SoB equals 100%
                     const totalRow = markets.find(m => m.country === 'Total')
                     let totalMarketValue = 0
                     let totalTotalValue = 0

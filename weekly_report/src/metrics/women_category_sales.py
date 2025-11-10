@@ -39,8 +39,9 @@ def calculate_women_category_sales_for_weeks(base_week: str, num_weeks: int, dat
     results = []
     
     # Load all raw data once from base week directory
-    logger.info(f"Loading raw data from {data_root}")
-    raw_data = load_all_raw_data(data_root)
+    latest_data_path = data_root / "raw" / base_week
+    logger.info(f"Loading raw data from {latest_data_path}")
+    raw_data = load_all_raw_data(latest_data_path)
     qlik_df = raw_data.get('qlik', pd.DataFrame())
     
     if qlik_df.empty:

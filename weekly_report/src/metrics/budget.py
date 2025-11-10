@@ -101,3 +101,10 @@ def calculate_budget_metrics(base_week: str, data_root: Path) -> Dict[str, Any]:
     
     return metrics
 
+
+
+
+
+
+
+

@@ -56,9 +56,10 @@ def calculate_sessions_per_country_for_weeks(base_week: str, num_weeks: int, dat
     results = []
     
     # Load Shopify data directly (not from cache) to ensure fresh data
-    logger.info(f"Loading Shopify data from {data_root}")
+    latest_data_path = data_root / "raw" / base_week
+    logger.info(f"Loading Shopify data from {latest_data_path}")
     from weekly_report.src.adapters.shopify import load_data as load_shopify_data
-    shopify_df = load_shopify_data(data_root)
+    shopify_df = load_shopify_data(latest_data_path)
     
     if shopify_df.empty:
         logger.warning(f"No Shopify data found in {data_root}")

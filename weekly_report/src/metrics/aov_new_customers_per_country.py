@@ -88,8 +88,9 @@ def calculate_aov_new_customers_per_country_for_weeks(base_week: str, num_weeks:
     results = []
     
     # Load Qlik data
-    logger.info(f"Loading Qlik data from {data_root}")
-    qlik_df = load_all_raw_data(data_root).get('qlik', pd.DataFrame())
+    latest_data_path = data_root / "raw" / base_week
+    logger.info(f"Loading Qlik data from {latest_data_path}")
+    qlik_df = load_all_raw_data(latest_data_path).get('qlik', pd.DataFrame())
     
     if qlik_df.empty:
         logger.warning(f"No Qlik data found in {data_root}")

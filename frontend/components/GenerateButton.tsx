@@ -124,7 +124,7 @@ export default function GenerateButton({
             <span className="font-medium">Base Week:</span> {baseWeek}
           </div>
           <div>
-            <span className="font-medium">Periods:</span> {Object.keys(periods.date_ranges).length}
+            <span className="font-medium">Periods:</span> {periods.date_ranges ? Object.keys(periods.date_ranges).length : 0}
           </div>
           <div>
             <span className="font-medium">Metrics:</span> 13 KPIs

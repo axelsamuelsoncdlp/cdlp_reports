@@ -19,8 +19,7 @@ out/
 *.log
 
 # Data
-data/raw/
-data/curated/
+data/
 charts/
 reports/
 
@@ -41,3 +40,4 @@ Thumbs.db
 # Environment
 .env
 .env.local
+weekly_report/data/

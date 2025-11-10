@@ -99,7 +99,7 @@ export default function PeriodSelector({
                 <span className="text-sm font-medium">{periods.actual}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {periods.date_ranges.actual?.display || 'N/A'}
+                {periods.date_ranges?.actual?.display || 'N/A'}
               </div>
             </div>
             
@@ -109,7 +109,7 @@ export default function PeriodSelector({
                 <span className="text-sm font-medium">{periods.last_week}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {periods.date_ranges.last_week?.display || 'N/A'}
+                {periods.date_ranges?.last_week?.display || 'N/A'}
               </div>
             </div>
             
@@ -119,7 +119,7 @@ export default function PeriodSelector({
                 <span className="text-sm font-medium">{periods.last_year}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {periods.date_ranges.last_year?.display || 'N/A'}
+                {periods.date_ranges?.last_year?.display || 'N/A'}
               </div>
             </div>
             
@@ -129,7 +129,7 @@ export default function PeriodSelector({
                 <span className="text-sm font-medium">{periods.year_2023}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {periods.date_ranges.year_2023?.display || 'N/A'}
+                {periods.date_ranges?.year_2023?.display || 'N/A'}
               </div>
             </div>
           </div>

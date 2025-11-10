@@ -236,5 +236,23 @@ def validate(
         raise typer.Exit(1)
 
 
+@app.command()
+def sync_supabase(
+    week: Optional[str] = typer.Option(None, "--week", "-w", help="ISO week format: YYYY-WW"),
+) -> None:
+    """Sync precomputed report data to Supabase for read-optimized frontend access."""
+    
+    from weekly_report.src.sync.supabase_sync import sync_supabase_data
+    
+    result = sync_supabase_data(week)
+    
+    if not result.get("success"):
+        logger.error(f"Sync failed: {result.get('error', 'Unknown error')}")
+        raise typer.Exit(1)
+    
+    logger.success(f"Sync completed successfully in {result.get('elapsed_seconds', 0):.2f} seconds")
+    logger.info(f"Row counts: {result.get('row_counts', {})}")
+
+
 if __name__ == "__main__":
     app()

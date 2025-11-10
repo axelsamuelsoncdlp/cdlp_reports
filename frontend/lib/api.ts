@@ -186,11 +186,23 @@ export async function getTable1Metrics(baseWeek: string, periods: string[], incl
 }
 
 export async function getTopMarkets(baseWeek: string, numWeeks: number = 8): Promise<MarketsResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/markets/top?base_week=${baseWeek}&num_weeks=${numWeeks}`)
-  if (!response.ok) {
-    throw new Error(`Failed to fetch markets: ${response.statusText}`)
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/markets/top?base_week=${baseWeek}&num_weeks=${numWeeks}`, {
+      signal: AbortSignal.timeout(60000) // 60 second timeout
+    })
+    if (!response.ok) {
+      throw new Error(`Failed to fetch markets: ${response.statusText}`)
+    }
+    return response.json()
+  } catch (error: any) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      throw new Error(`Request timeout: Backend server may be slow or unresponsive`)
+    }
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError')) {
+      throw new Error(`Network error: Unable to connect to backend server at ${API_BASE_URL}. Please check if the server is running.`)
+    }
+    throw error
   }
-  return response.json()
 }
 
 export async function getOnlineKPIs(baseWeek: string, numWeeks: number = 8): Promise<OnlineKPIsResponse> {
@@ -642,4 +654,269 @@ export async function generatePDF(baseWeek: string, periods: string[]): Promise<
 
 export function getDownloadUrl(filename: string): string {
   return `${API_BASE_URL}/api/download/${filename}`
+}
+
+// PDFGenerationProgress is now PDFProgressUpdate (see above)
+
+export interface PDFProgressUpdate {
+  step: string
+  stepNumber: number
+  totalSteps: number
+  message: string
+  currentPage?: string | null
+  percentage: number
+  result?: GeneratePDFResponse
+  error?: string
+}
+
+export async function generateWeeklyReportsPDF(
+  baseWeek: string,
+  periods: string[],
+  onProgress?: (progress: PDFProgressUpdate) => void
+): Promise<GeneratePDFResponse> {
+  try {
+    // Use Server-Sent Events (SSE) for real-time progress updates
+    // Backend will send progress updates for each page as it's being screenshotted
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/generate/weekly-reports-pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base_week: baseWeek, periods }),
+      })
+      
+      if (!response.ok) {
+        throw new Error(`Failed to start PDF generation: ${response.statusText}`)
+      }
+      
+      if (!response.body) {
+        throw new Error('No response body from server')
+      }
+      
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+      let result: GeneratePDFResponse | null = null
+      
+      while (true) {
+        const { done, value } = await reader.read()
+        
+        if (done) {
+          break
+        }
+        
+        buffer += decoder.decode(value, { stream: true })
+        
+        // Process complete SSE events
+        const lines = buffer.split('\n')
+        buffer = lines.pop() || '' // Keep incomplete line in buffer
+        
+        for (const line of lines) {
+          if (line.trim() === '') continue // Skip empty lines
+          if (line.startsWith('data: ')) {
+            try {
+              const jsonStr = line.slice(6).trim()
+              if (!jsonStr) continue // Skip empty data lines
+              
+              const data = JSON.parse(jsonStr)
+              
+              // Debug logging (only for non-heartbeat updates)
+              if (data.step !== 'processing' && data.step !== 'heartbeat') {
+                console.log('📊 PDF Progress Update:', {
+                  step: data.step,
+                  stepNumber: data.stepNumber,
+                  totalSteps: data.totalSteps,
+                  message: data.message,
+                  currentPage: data.currentPage,
+                  percentage: data.percentage,
+                  hasError: !!data.error,
+                  hasResult: !!data.result
+                })
+              }
+              
+              // Report progress update
+              if (onProgress) {
+                onProgress({
+                  step: data.step || 'unknown',
+                  stepNumber: data.stepNumber || 0,
+                  totalSteps: data.totalSteps || 1,
+                  message: data.message || 'Processing...',
+                  currentPage: data.currentPage,
+                  percentage: data.percentage || 0,
+                  result: data.result,
+                  error: data.error
+                })
+              }
+              
+              // If we got an error, throw it immediately (this will break the loop)
+              if (data.error) {
+                console.error('❌ PDF Generation Error:', data.error)
+                throw new Error(data.error)
+              }
+              
+              // If step is 'error' but no error message, throw generic error
+              if (data.step === 'error' && !data.error) {
+                console.error('❌ PDF Generation Error (unknown):', data)
+                throw new Error('PDF generation failed with unknown error')
+              }
+              
+              // If we got a result, store it
+              if (data.result) {
+                result = data.result
+                console.log('✅ PDF Generation Result:', result)
+              }
+              
+            } catch (parseError) {
+              console.warn('Failed to parse SSE data:', parseError, 'Line:', line)
+            }
+          } else if (line.trim() !== '') {
+            // Log non-SSE lines for debugging
+            console.debug('Non-SSE line received:', line)
+          }
+        }
+      }
+      
+      // Check if we got an error during the process
+      if (!result) {
+        // Check if we received any error messages in progress updates
+        // If we reached here without result, it means the stream ended but no result was sent
+        // This could mean:
+        // 1. An error occurred but wasn't caught properly
+        // 2. The backend didn't send the final result
+        // 3. The stream ended prematurely
+        throw new Error('PDF generation completed but no result was returned. The backend may have encountered an error. Check backend logs for details.')
+      }
+      
+      return result
+      
+    } catch (fetchError: any) {
+      if (fetchError.name === 'AbortError' || fetchError.name === 'TimeoutError') {
+        throw new Error('PDF generation timed out. Please try again.')
+      } else if (fetchError.message?.includes('Failed to fetch') || fetchError.message?.includes('network')) {
+        throw new Error('Unable to connect to backend server. Please ensure the backend is running on port 8000.')
+      } else {
+        throw new Error(`Network error: ${fetchError.message || 'Failed to connect to server'}`)
+      }
+    }
+  } catch (error: any) {
+    if (onProgress) {
+      onProgress({
+        step: 'error',
+        stepNumber: 0,
+        totalSteps: 1,
+        message: `Error: ${error.message || 'Failed to generate PDF'}`,
+        currentPage: null,
+        percentage: 0,
+        error: error.message
+      })
+    }
+    throw error
+  }
+}
+
+// Budget APIs
+export interface BudgetGeneralResponse {
+  week: string
+  months: string[]
+  metrics: string[]
+  table: Record<string, Record<string, number>>
+  totals?: Record<string, number>
+  ytd_totals?: Record<string, number>
+  customer_by_metric?: Record<string, string>
+  display_name_by_metric?: Record<string, string>
+}
+
+export interface ActualsGeneralResponse {
+  week: string
+  months: string[]
+  metrics: string[]
+  table: Record<string, Record<string, number>>
+  totals?: Record<string, number>
+  ytd_totals?: Record<string, number>
+}
+
+export async function getBudgetGeneral(baseWeek: string): Promise<BudgetGeneralResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/budget-general?week=${baseWeek}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch budget general: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getActualsGeneral(baseWeek: string): Promise<ActualsGeneralResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/actuals-general?week=${baseWeek}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch actuals general: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+// Budget raw data (markets page prototype)
+export interface BudgetRawResponse {
+  columns: string[]
+  sample_data: Array<Record<string, any>>
+}
+
+export async function getBudgetRaw(baseWeek: string): Promise<BudgetRawResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/budget-data?week=${baseWeek}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch budget raw: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export async function getActualsMarkets(baseWeek: string): Promise<BudgetRawResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/actuals-markets?week=${baseWeek}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch actuals markets: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export interface ActualsMarketsDetailedResponse {
+  week: string
+  months: string[]
+  markets: string[]
+  metrics: string[]
+  table: Record<string, Record<string, Record<string, number>>> // market -> metric -> month -> value
+  totals: Record<string, Record<string, number>> // market -> metric -> total
+  ytd_totals: Record<string, Record<string, number>> // market -> metric -> ytd
+}
+
+export async function getActualsMarketsDetailed(baseWeek: string): Promise<ActualsMarketsDetailedResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/actuals-markets-detailed?week=${baseWeek}`)
+  if (!response.ok) {
+    throw new Error(`Failed to fetch actuals markets detailed: ${response.statusText}`)
+  }
+  return response.json()
+}
+
+export interface SupabaseSyncResponse {
+  success: boolean
+  week: string
+  row_counts: Record<string, number>
+  elapsed_seconds: number
+  sync_id?: string
+  error?: string
+}
+
+export async function syncSupabase(baseWeek: string): Promise<SupabaseSyncResponse> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/sync-supabase?week=${baseWeek}`, {
+      method: 'POST',
+      signal: AbortSignal.timeout(180000) // 180 second timeout (3 minutes) - sync can take 97+ seconds
+    })
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: response.statusText }))
+      throw new Error(error.detail || `Failed to sync Supabase: ${response.statusText}`)
+    }
+    return response.json()
+  } catch (error: any) {
+    if (error.name === 'TimeoutError' || error.name === 'AbortError') {
+      throw new Error(`Request timeout: Supabase sync took too long (over 3 minutes). The sync may still be processing in the background.`)
+    }
+    if (error.message?.includes('Failed to fetch') || error.message?.includes('NetworkError') || error.message?.includes('ERR_NETWORK_IO_SUSPENDED')) {
+      throw new Error(`Network error: Unable to connect to backend server at ${API_BASE_URL}. The sync may still be processing in the background.`)
+    }
+    throw error
+  }
 }

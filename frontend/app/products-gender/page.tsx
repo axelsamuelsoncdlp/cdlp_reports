@@ -2,28 +2,23 @@
 
 import { useEffect, useState } from 'react'
 import ProductsGenderTable from '@/components/ProductsGenderTable'
-import { getPeriods } from '@/lib/api'
 import { Loader2 } from 'lucide-react'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useDataCache } from '@/contexts/DataCacheContext'
 
 export default function ProductsGender() {
   const { baseWeek } = useDataCache()
-  const [periods, setPeriods] = useState(null)
+  const [periods, setPeriods] = useState<any>(null)
 
-  // Load periods on mount and when baseWeek changes
+  // Use periods from cache instead of loading automatically
+  const { periods: cachedPeriods } = useDataCache()
+  
   useEffect(() => {
-    const loadPeriods = async () => {
-      if (!baseWeek) return
-      try {
-        const data = await getPeriods(baseWeek)
-        setPeriods(data)
-      } catch (err) {
-        console.error('Failed to load periods:', err)
-      }
+    // Only use cached periods - don't auto-load
+    if (cachedPeriods) {
+      setPeriods(cachedPeriods as any)
     }
-    loadPeriods()
-  }, [baseWeek])
+  }, [cachedPeriods])
 
   return (
     <div className="space-y-8">

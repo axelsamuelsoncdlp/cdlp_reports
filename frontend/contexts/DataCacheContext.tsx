@@ -24,6 +24,11 @@ import {
   getContributionReturningTotalPerCountry,
   getTotalContributionPerCountry,
   getBatchMetrics,
+  getBudgetGeneral,
+  getActualsGeneral,
+  getBudgetRaw,
+  getActualsMarkets,
+  getActualsMarketsDetailed,
   type PeriodsResponse,
   type MetricsResponse,
   type MarketsResponse,
@@ -45,7 +50,9 @@ import {
   type ContributionReturningPerCountryResponse,
   type ContributionReturningTotalPerCountryResponse,
   type TotalContributionPerCountryResponse,
-  type BatchMetricsResponse
+  type BatchMetricsResponse,
+  type BudgetGeneralResponse,
+  type ActualsGeneralResponse
 } from '@/lib/api'
 
 interface LoadingProgress {
@@ -78,6 +85,11 @@ interface CacheData {
   contribution_returning_per_country: ContributionReturningPerCountryResponse | null
   contribution_returning_total_per_country: ContributionReturningTotalPerCountryResponse | null
   total_contribution_per_country: TotalContributionPerCountryResponse | null
+  budget_general?: BudgetGeneralResponse | null
+  actuals_general?: ActualsGeneralResponse | null
+  budget_raw?: any | null
+  actuals_markets?: any | null
+  actuals_markets_detailed?: any | null
   timestamp: number
 }
 
@@ -103,6 +115,11 @@ interface DataCacheContextType {
   contribution_returning_per_country: ContributionReturningPerCountryResponse | null
   contribution_returning_total_per_country: ContributionReturningTotalPerCountryResponse | null
   total_contribution_per_country: TotalContributionPerCountryResponse | null
+  budget_general: BudgetGeneralResponse | null
+  actuals_general: ActualsGeneralResponse | null
+  budget_raw: any | null
+  actuals_markets: any | null
+  actuals_markets_detailed: any | null
   loading: boolean
   error: string | null
   loadingProgress: LoadingProgress | null
@@ -116,7 +133,7 @@ interface DataCacheContextType {
 
 const DataCacheContext = createContext<DataCacheContextType | undefined>(undefined)
 
-const CACHE_EXPIRY = 60 * 60 * 1000 // 1 hour
+const CACHE_EXPIRY = 24 * 60 * 60 * 1000 // 24 hours (increased since Supabase is primary)
 const DEFAULT_BASE_WEEK = '2025-42'
 
 export function DataCacheProvider({ children }: { children: ReactNode }) {
@@ -141,6 +158,11 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
   const [contribution_returning_per_country, setContribution_returning_per_country] = useState<ContributionReturningPerCountryResponse | null>(null)
   const [contribution_returning_total_per_country, setContribution_returning_total_per_country] = useState<ContributionReturningTotalPerCountryResponse | null>(null)
   const [total_contribution_per_country, setTotal_contribution_per_country] = useState<TotalContributionPerCountryResponse | null>(null)
+  const [budget_general, setBudget_general] = useState<BudgetGeneralResponse | null>(null)
+  const [actuals_general, setActuals_general] = useState<ActualsGeneralResponse | null>(null)
+  const [budget_raw, setBudget_raw] = useState<any | null>(null)
+  const [actuals_markets, setActuals_markets] = useState<any | null>(null)
+  const [actuals_markets_detailed, setActuals_markets_detailed] = useState<any | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [loadingProgress, setLoadingProgress] = useState<LoadingProgress | null>(null)
@@ -211,6 +233,14 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setContribution_returning_per_country(cached.contribution_returning_per_country)
         setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
       setTotal_contribution_per_country(cached.total_contribution_per_country)
+      setBudget_general(cached.budget_general ?? null)
+      setActuals_general(cached.actuals_general ?? null)
+      setBudget_raw(cached.budget_raw ?? null)
+      // optional
+      // @ts-ignore
+      setActuals_markets(cached.actuals_markets ?? null)
+      // @ts-ignore
+      setActuals_markets_detailed(cached.actuals_markets_detailed ?? null)
       setIsDataReady(true)
       return
     }
@@ -219,22 +249,70 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     setLoading(true)
 
     try {
-      // Try to load all data via batch endpoint first (fallback to individual calls)
+      // Try to load from Supabase first (fastest option)
       setLoadingProgress({ 
         step: 'metrics', 
         stepNumber: 1, 
-        totalSteps: 21, 
-        message: 'Loading all metrics in batch...', 
-        percentage: 5 
+        totalSteps: 27, 
+        message: 'Loading metrics from Supabase...', 
+        percentage: 3 
       })
       
       let batchMode = false
+      let batchData: any = null
+      
       try {
-        // Try batch endpoint
-        const batchData = await getBatchMetrics(week, 8)
-        batchMode = true
+        // Try Supabase first
+        const { loadWeeklyReportMetricsFromSupabase } = await import('@/lib/supabase-queries')
+        const supabaseData = await loadWeeklyReportMetricsFromSupabase(week, false) // Don't auto-fallback to API
         
-        // Set all data from batch response
+        if (supabaseData) {
+          batchData = supabaseData
+          batchMode = true
+          console.log(`✅ Loaded all metrics from Supabase for ${week}`)
+          
+          // Check if YTD data exists in loaded metrics
+          const metrics = batchData?.metrics || {}
+          const hasYtdData = metrics.ytd_actual && metrics.ytd_last_year && metrics.ytd_2023
+          
+          if (!hasYtdData) {
+            console.warn(`⚠️ Loaded metrics from Supabase are missing YTD data. Will trigger re-computation on next sync.`)
+            console.warn(`Missing YTD keys:`, {
+              ytd_actual: !!metrics.ytd_actual,
+              ytd_last_year: !!metrics.ytd_last_year,
+              ytd_2023: !!metrics.ytd_2023
+            })
+          } else {
+            console.log(`✅ YTD data verified in Supabase metrics: ytd_actual, ytd_last_year, ytd_2023`)
+          }
+        }
+      } catch (supabaseError) {
+        console.debug('Could not load from Supabase, will try API:', supabaseError)
+      }
+      
+      // If Supabase didn't have data, try API batch endpoint
+      if (!batchData) {
+        setLoadingProgress({ 
+          step: 'metrics', 
+          stepNumber: 1, 
+          totalSteps: 27, 
+          message: 'Loading all metrics from API...', 
+          percentage: 5 
+        })
+        
+        try {
+          // Try batch endpoint
+          batchData = await getBatchMetrics(week, 8)
+          batchMode = true
+          console.log(`📦 Loaded all metrics from API for ${week}`)
+        } catch (batchError) {
+          console.warn('Batch endpoint failed, falling back to individual calls:', batchError)
+          batchMode = false
+        }
+      }
+      
+      // Set all data from batch response (from Supabase or API)
+      if (batchData && batchMode) {
         setPeriods(batchData.periods)
         setMetrics(batchData.metrics)
         setMarkets(batchData.markets)
@@ -256,15 +334,102 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
         setContribution_returning_per_country(batchData.contribution_returning_per_country)
         setContribution_returning_total_per_country(batchData.contribution_returning_total_per_country)
         setTotal_contribution_per_country(batchData.total_contribution_per_country)
+      }
+      
+      // Budget-related steps (show progress) - load regardless of batch mode
+      // Only sync to Supabase if explicitly requested via forceRefresh or if YTD data is missing
+      if (batchMode && batchData) {
+        // Check if YTD data is missing
+        const metrics = batchData?.metrics || {}
+        const hasYtdData = metrics.ytd_actual && metrics.ytd_last_year && metrics.ytd_2023
+        const needsSync = !hasYtdData && forceRefresh
         
+        if (needsSync) {
+          console.log(`🔄 YTD data missing from cached metrics, triggering sync to recompute...`)
+          setLoadingProgress({ 
+            step: 'metrics', 
+            stepNumber: 21, 
+            totalSteps: 27, 
+            message: 'Recomputing metrics with YTD data...', 
+            percentage: 81 
+          })
+          // Run sync in background - don't block UI
+          ;(async () => {
+            try {
+              const { syncSupabase } = await import('@/lib/api')
+              const syncResult = await syncSupabase(week)
+              console.log(`✅ Supabase sync completed for week ${week}`, syncResult.row_counts)
+              
+              // After successful sync, reload metrics if YTD was missing
+              console.log(`🔄 Reloading metrics after YTD recomputation...`)
+              try {
+                const { loadWeeklyReportMetricsFromSupabase } = await import('@/lib/supabase-queries')
+                const updatedData = await loadWeeklyReportMetricsFromSupabase(week, false)
+                if (updatedData) {
+                  setMetrics(updatedData.metrics)
+                  console.log(`✅ Reloaded metrics with YTD data`)
+                }
+              } catch (reloadError) {
+                console.warn(`⚠️ Failed to reload metrics after sync:`, reloadError)
+              }
+            } catch (syncError) {
+              console.warn(`⚠️ Supabase sync failed (non-blocking):`, syncError)
+            }
+          })()
+        }
+        
+        setLoadingProgress({ step: 'metrics', stepNumber: 22, totalSteps: 27, message: 'Loading budget general...', percentage: 85 })
+        let budgetGeneralData: BudgetGeneralResponse | null = null
+        let actualsGeneralData: ActualsGeneralResponse | null = null
+        try {
+          budgetGeneralData = await getBudgetGeneral(week)
+          setBudget_general(budgetGeneralData)
+        } catch (e) {
+          budgetGeneralData = null
+        }
+        setLoadingProgress({ step: 'metrics', stepNumber: 23, totalSteps: 27, message: 'Loading actuals general...', percentage: 88 })
+        try {
+          actualsGeneralData = await getActualsGeneral(week)
+          setActuals_general(actualsGeneralData)
+        } catch (e) {
+          actualsGeneralData = null
+        }
+        // Budget raw (for Markets prototype)
+        setLoadingProgress({ step: 'metrics', stepNumber: 24, totalSteps: 27, message: 'Loading budget raw (markets)...', percentage: 91 })
+        let budgetRawData: any | null = null
+        try {
+          budgetRawData = await getBudgetRaw(week)
+          setBudget_raw(budgetRawData)
+        } catch (e) {
+          budgetRawData = null
+        }
+        // Actuals per market
+        setLoadingProgress({ step: 'metrics', stepNumber: 25, totalSteps: 27, message: 'Loading actuals markets...', percentage: 94 })
+        let actualsMarketsData: any | null = null
+        try {
+          actualsMarketsData = await getActualsMarkets(week)
+          setActuals_markets(actualsMarketsData)
+        } catch (e) {
+          actualsMarketsData = null
+        }
+        // Actuals per market detailed
+        setLoadingProgress({ step: 'metrics', stepNumber: 26, totalSteps: 27, message: 'Loading actuals markets detailed...', percentage: 97 })
+        let actualsMarketsDetailedData: any | null = null
+        try {
+          actualsMarketsDetailedData = await getActualsMarketsDetailed(week)
+          setActuals_markets_detailed(actualsMarketsDetailedData)
+        } catch (e) {
+          actualsMarketsDetailedData = null
+        }
+
         setLoadingProgress({ 
           step: 'complete', 
-          stepNumber: 21, 
-          totalSteps: 21, 
+          stepNumber: 27, 
+          totalSteps: 27, 
           message: 'Complete!', 
           percentage: 100 
         })
-        
+
         // Save to cache
         saveCache(week, {
           periods: batchData.periods,
@@ -288,14 +453,16 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
           contribution_returning_per_country: batchData.contribution_returning_per_country,
           contribution_returning_total_per_country: batchData.contribution_returning_total_per_country,
           total_contribution_per_country: batchData.total_contribution_per_country,
+          budget_general: budgetGeneralData,
+          actuals_general: actualsGeneralData,
+          budget_raw: budgetRawData,
+          actuals_markets: actualsMarketsData,
+          actuals_markets_detailed: actualsMarketsDetailedData,
           timestamp: Date.now()
         })
         
         setLoading(false)
         return
-      } catch (batchError) {
-        console.warn('Batch endpoint failed, falling back to individual calls:', batchError)
-        // Fall through to individual calls
       }
       
       // Individual calls (fallback or primary if batch disabled)
@@ -304,7 +471,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'periods', 
         stepNumber: 1, 
-        totalSteps: 21, 
+        totalSteps: 26, 
         message: 'Loading periods...', 
         percentage: 0 
       })
@@ -315,7 +482,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'metrics', 
         stepNumber: 2, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading summary metrics...', 
         percentage: 12 
       })
@@ -326,7 +493,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'markets', 
         stepNumber: 3, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading top markets data...', 
         percentage: 25 
       })
@@ -337,7 +504,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'kpis', 
         stepNumber: 4, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading online KPIs...', 
         percentage: 37 
       })
@@ -348,7 +515,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution', 
         stepNumber: 5, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading contribution metrics...', 
         percentage: 50 
       })
@@ -359,7 +526,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'gender_sales', 
         stepNumber: 6, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading gender sales data...', 
         percentage: 62 
       })
@@ -370,7 +537,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'men_category_sales', 
         stepNumber: 7, 
-        totalSteps: 8, 
+        totalSteps: 26, 
         message: 'Loading men category sales...', 
         percentage: 75 
       })
@@ -381,7 +548,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'women_category_sales', 
         stepNumber: 8, 
-        totalSteps: 9, 
+        totalSteps: 26, 
         message: 'Loading women category sales...', 
         percentage: 87 
       })
@@ -392,7 +559,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'sessions_per_country', 
         stepNumber: 9, 
-        totalSteps: 10, 
+        totalSteps: 26, 
         message: 'Loading sessions per country...', 
         percentage: 90 
       })
@@ -403,7 +570,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'conversion_per_country', 
         stepNumber: 10, 
-        totalSteps: 11, 
+        totalSteps: 26, 
         message: 'Loading conversion per country...', 
         percentage: 90 
       })
@@ -414,7 +581,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'new_customers_per_country', 
         stepNumber: 11, 
-        totalSteps: 12, 
+        totalSteps: 26, 
         message: 'Loading new customers per country...', 
         percentage: 92 
       })
@@ -425,7 +592,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'returning_customers_per_country', 
         stepNumber: 12, 
-        totalSteps: 13, 
+        totalSteps: 26, 
         message: 'Loading returning customers per country...', 
         percentage: 92 
       })
@@ -436,7 +603,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'aov_new_customers_per_country', 
         stepNumber: 13, 
-        totalSteps: 14, 
+        totalSteps: 26, 
         message: 'Loading AOV new customers per country...', 
         percentage: 93 
       })
@@ -447,7 +614,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'aov_returning_customers_per_country', 
         stepNumber: 14, 
-        totalSteps: 15, 
+        totalSteps: 26, 
         message: 'Loading AOV returning customers per country...', 
         percentage: 93 
       })
@@ -458,7 +625,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'marketing_spend_per_country', 
         stepNumber: 15, 
-        totalSteps: 16, 
+        totalSteps: 26, 
         message: 'Loading marketing spend per country...', 
         percentage: 94 
       })
@@ -469,7 +636,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'ncac_per_country', 
         stepNumber: 16, 
-        totalSteps: 17, 
+        totalSteps: 26, 
         message: 'Loading nCAC per country...', 
         percentage: 94 
       })
@@ -480,7 +647,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution_new_per_country', 
         stepNumber: 17, 
-        totalSteps: 18, 
+        totalSteps: 26, 
         message: 'Loading contribution per new customer per country...', 
         percentage: 94 
       })
@@ -491,7 +658,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution_new_total_per_country', 
         stepNumber: 18, 
-        totalSteps: 20, 
+        totalSteps: 26, 
         message: 'Loading total contribution per country...', 
         percentage: 90 
       })
@@ -502,7 +669,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution_returning_per_country', 
         stepNumber: 19, 
-        totalSteps: 20, 
+        totalSteps: 26, 
         message: 'Loading contribution per returning customer per country...', 
         percentage: 95 
       })
@@ -513,7 +680,7 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'contribution_returning_total_per_country', 
         stepNumber: 20, 
-        totalSteps: 21, 
+        totalSteps: 26, 
         message: 'Loading total contribution per returning customers by country...', 
         percentage: 95 
       })
@@ -524,17 +691,62 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setLoadingProgress({ 
         step: 'total_contribution_per_country', 
         stepNumber: 21, 
-        totalSteps: 21, 
+        totalSteps: 26, 
         message: 'Loading total contribution for all customers by country...', 
         percentage: 97 
       })
       const totalContributionPerCountryData = await getTotalContributionPerCountry(week, 8)
       setTotal_contribution_per_country(totalContributionPerCountryData)
 
+      // Budget-related progress steps
+      // Skip Supabase sync for individual calls mode - data is already loaded
+      setLoadingProgress({ step: 'metrics', stepNumber: 22, totalSteps: 27, message: 'Loading budget general...', percentage: 85 })
+
+      // Fetch and cache budget + actuals general as part of refresh
+      let budgetGeneralData2: BudgetGeneralResponse | null = null
+      let actualsGeneralData2: ActualsGeneralResponse | null = null
+      try {
+        budgetGeneralData2 = await getBudgetGeneral(week)
+        setBudget_general(budgetGeneralData2)
+      } catch (e) {
+        budgetGeneralData2 = null
+      }
+      setLoadingProgress({ step: 'metrics', stepNumber: 23, totalSteps: 27, message: 'Loading actuals general...', percentage: 88 })
+      try {
+        actualsGeneralData2 = await getActualsGeneral(week)
+        setActuals_general(actualsGeneralData2)
+      } catch (e) {
+        actualsGeneralData2 = null
+      }
+      let budgetRawData2: any | null = null
+      try {
+        budgetRawData2 = await getBudgetRaw(week)
+        setBudget_raw(budgetRawData2)
+      } catch (e) {
+        budgetRawData2 = null
+      }
+      setLoadingProgress({ step: 'metrics', stepNumber: 24, totalSteps: 27, message: 'Loading budget raw (markets)...', percentage: 91 })
+      let actualsMarketsData2: any | null = null
+      try {
+        actualsMarketsData2 = await getActualsMarkets(week)
+        setActuals_markets(actualsMarketsData2)
+      } catch (e) {
+        actualsMarketsData2 = null
+      }
+      setLoadingProgress({ step: 'metrics', stepNumber: 25, totalSteps: 27, message: 'Loading actuals markets...', percentage: 94 })
+      let actualsMarketsDetailedData2: any | null = null
+      try {
+        actualsMarketsDetailedData2 = await getActualsMarketsDetailed(week)
+        setActuals_markets_detailed(actualsMarketsDetailedData2)
+      } catch (e) {
+        actualsMarketsDetailedData2 = null
+      }
+      setLoadingProgress({ step: 'metrics', stepNumber: 26, totalSteps: 27, message: 'Loading actuals markets detailed...', percentage: 97 })
+
       setLoadingProgress({ 
         step: 'complete', 
-        stepNumber: 21, 
-        totalSteps: 21, 
+        stepNumber: 27, 
+        totalSteps: 27, 
         message: 'Complete!', 
         percentage: 100 
       })
@@ -563,6 +775,11 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
           contribution_returning_per_country: contributionReturningPerCountryData,
           contribution_returning_total_per_country: contributionReturningTotalPerCountryData,
           total_contribution_per_country: totalContributionPerCountryData,
+          budget_general: budgetGeneralData2,
+          actuals_general: actualsGeneralData2,
+          budget_raw: budgetRawData2,
+          actuals_markets: actualsMarketsData2,
+          actuals_markets_detailed: actualsMarketsDetailedData2,
           timestamp: Date.now()
         })
         }
@@ -577,6 +794,9 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setTimeout(() => setLoadingProgress(null), 500)
     }
   }, [])
+
+  // NO AUTO-LOAD - Data should only load when user explicitly requests it
+  // Removed auto-load useEffect that was triggering on baseWeek change
 
   const refreshData = useCallback(async () => {
     await loadAllData(baseWeek, true)
@@ -594,35 +814,42 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setMen_category_sales(null)
       setWomen_category_sales(null)
       setSessions_per_country(null)
+      setBudget_general(null)
+      setActuals_general(null)
+      setBudget_raw(null)
     } catch (err) {
       console.warn('Failed to clear cache:', err)
     }
   }, [baseWeek])
 
-  // Load data on mount and when baseWeek changes - BUT only if user has already selected a week
-  // Don't auto-load on initial mount - wait for user to select a week first
-  const [hasUserSelectedWeek, setHasUserSelectedWeek] = useState(false)
-  
+  // Load saved week from localStorage on mount (but don't auto-load data)
+  // Also read week from URL if present (for PDF generation)
   useEffect(() => {
-    // Check if user has ever selected a week (stored in localStorage)
+    // Check URL for week parameter first (for PDF generation)
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const weekFromUrl = urlParams.get('week')
+      if (weekFromUrl) {
+        console.log(`📌 Week parameter found in URL: ${weekFromUrl}`)
+        setBaseWeekInternal(weekFromUrl)
+        localStorage.setItem('selected_week', weekFromUrl)
+        return
+      }
+    }
+    
+    // Fallback to localStorage
     const savedWeek = localStorage.getItem('selected_week')
     if (savedWeek) {
-      setHasUserSelectedWeek(true)
       setBaseWeekInternal(savedWeek)
-    } else {
-      // No saved week - don't load anything yet, wait for user to select
-      return
     }
   }, [])
   
-  // Load cached data on mount - only if user has previously selected a week
+  // Load cached data on mount and when baseWeek changes - from cache OR Supabase (silent, no progress spinner)
+  // Also trigger data load if data is missing but week is set (for PDF generation)
   useEffect(() => {
-    // Only load if user has explicitly selected a week
-    if (!hasUserSelectedWeek && !localStorage.getItem('selected_week')) {
-      return // Skip loading until user selects a week
-    }
+    if (!baseWeek) return
     
-    // Only load cached data - never trigger API calls on mount
+    // First, try localStorage cache
     const cached = getCachedData(baseWeek)
     if (cached) {
       // Load from cache immediately to avoid any delay
@@ -647,11 +874,153 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
       setContribution_returning_per_country(cached.contribution_returning_per_country)
       setContribution_returning_total_per_country(cached.contribution_returning_total_per_country)
       setTotal_contribution_per_country(cached.total_contribution_per_country)
+      setBudget_general(cached.budget_general ?? null)
+      setActuals_general(cached.actuals_general ?? null)
+      setBudget_raw(cached.budget_raw ?? null)
+      setActuals_markets(cached.actuals_markets ?? null)
+      setActuals_markets_detailed(cached.actuals_markets_detailed ?? null)
       setIsDataReady(true)
-    } else {
-      setIsDataReady(false)
+      return
     }
-  }, [baseWeek, hasUserSelectedWeek]) // Only load from cache when week changes
+    
+    // No cache - try Supabase (silent, no progress spinner)
+    // This is a background load that doesn't block the UI
+    ;(async () => {
+      try {
+        const { loadWeeklyReportMetricsFromSupabase } = await import('@/lib/supabase-queries')
+        const supabaseMetrics = await loadWeeklyReportMetricsFromSupabase(baseWeek, false) // Don't auto-fallback to API
+        
+        if (supabaseMetrics) {
+          // Load periods from API (periods are not stored in Supabase, they're calculated)
+          // This is a lightweight call that just calculates week numbers
+          let periodsData: PeriodsResponse | null = null
+          try {
+            periodsData = await getPeriods(baseWeek)
+            setPeriods(periodsData)
+            console.log(`✅ Loaded periods from API for ${baseWeek}`)
+          } catch (periodsError) {
+            console.warn('Failed to load periods:', periodsError)
+            // Don't fail completely - metrics can still be displayed
+          }
+          
+          // Load data from Supabase metrics (supabaseMetrics is the full batch response)
+          setMetrics(supabaseMetrics.metrics)
+          setMarkets(supabaseMetrics.markets)
+          setKpis(supabaseMetrics.kpis)
+          setContribution(supabaseMetrics.contribution)
+          setGender_sales(supabaseMetrics.gender_sales)
+          setMen_category_sales(supabaseMetrics.men_category_sales)
+          setWomen_category_sales(supabaseMetrics.women_category_sales)
+          setSessions_per_country(supabaseMetrics.sessions_per_country)
+          setConversion_per_country(supabaseMetrics.conversion_per_country)
+          setNew_customers_per_country(supabaseMetrics.new_customers_per_country)
+          setReturning_customers_per_country(supabaseMetrics.returning_customers_per_country)
+          setAov_new_customers_per_country(supabaseMetrics.aov_new_customers_per_country)
+          setAov_returning_customers_per_country(supabaseMetrics.aov_returning_customers_per_country)
+          setMarketing_spend_per_country(supabaseMetrics.marketing_spend_per_country)
+          setNcac_per_country(supabaseMetrics.ncac_per_country)
+          setContribution_new_per_country(supabaseMetrics.contribution_new_per_country)
+          setContribution_new_total_per_country(supabaseMetrics.contribution_new_total_per_country)
+          setContribution_returning_per_country(supabaseMetrics.contribution_returning_per_country)
+          setContribution_returning_total_per_country(supabaseMetrics.contribution_returning_total_per_country)
+          setTotal_contribution_per_country(supabaseMetrics.total_contribution_per_country)
+          setIsDataReady(true)
+          
+          // Save to cache for faster future loads
+          saveCache(baseWeek, {
+            periods: periodsData,
+            metrics: supabaseMetrics.metrics,
+            markets: supabaseMetrics.markets,
+            kpis: supabaseMetrics.kpis,
+            contribution: supabaseMetrics.contribution,
+            gender_sales: supabaseMetrics.gender_sales,
+            men_category_sales: supabaseMetrics.men_category_sales,
+            women_category_sales: supabaseMetrics.women_category_sales,
+            sessions_per_country: supabaseMetrics.sessions_per_country,
+            conversion_per_country: supabaseMetrics.conversion_per_country,
+            new_customers_per_country: supabaseMetrics.new_customers_per_country,
+            returning_customers_per_country: supabaseMetrics.returning_customers_per_country,
+            aov_new_customers_per_country: supabaseMetrics.aov_new_customers_per_country,
+            aov_returning_customers_per_country: supabaseMetrics.aov_returning_customers_per_country,
+            marketing_spend_per_country: supabaseMetrics.marketing_spend_per_country,
+            ncac_per_country: supabaseMetrics.ncac_per_country,
+            contribution_new_per_country: supabaseMetrics.contribution_new_per_country,
+            contribution_new_total_per_country: supabaseMetrics.contribution_new_total_per_country,
+            contribution_returning_per_country: supabaseMetrics.contribution_returning_per_country,
+            contribution_returning_total_per_country: supabaseMetrics.contribution_returning_total_per_country,
+            total_contribution_per_country: supabaseMetrics.total_contribution_per_country,
+            budget_general: null,
+            actuals_general: null,
+            budget_raw: null,
+            actuals_markets: null,
+            actuals_markets_detailed: null,
+            timestamp: Date.now()
+          })
+          
+          console.log(`✅ Loaded data from Supabase for ${baseWeek}`)
+        } else {
+          // No Supabase data - clear all data
+          setPeriods(null)
+          setMetrics(null)
+          setMarkets(null)
+          setKpis(null)
+          setContribution(null)
+          setGender_sales(null)
+          setMen_category_sales(null)
+          setWomen_category_sales(null)
+          setSessions_per_country(null)
+          setConversion_per_country(null)
+          setNew_customers_per_country(null)
+          setReturning_customers_per_country(null)
+          setAov_new_customers_per_country(null)
+          setAov_returning_customers_per_country(null)
+          setMarketing_spend_per_country(null)
+          setNcac_per_country(null)
+          setContribution_new_per_country(null)
+          setContribution_new_total_per_country(null)
+          setContribution_returning_per_country(null)
+          setContribution_returning_total_per_country(null)
+          setTotal_contribution_per_country(null)
+          setBudget_general(null)
+          setActuals_general(null)
+          setBudget_raw(null)
+          setActuals_markets(null)
+          setActuals_markets_detailed(null)
+          setIsDataReady(false)
+        }
+      } catch (error) {
+        // Supabase load failed - clear data and set isDataReady to false
+        console.debug('Failed to load from Supabase (non-blocking):', error)
+        setPeriods(null)
+        setMetrics(null)
+        setMarkets(null)
+        setKpis(null)
+        setContribution(null)
+        setGender_sales(null)
+        setMen_category_sales(null)
+        setWomen_category_sales(null)
+        setSessions_per_country(null)
+        setConversion_per_country(null)
+        setNew_customers_per_country(null)
+        setReturning_customers_per_country(null)
+        setAov_new_customers_per_country(null)
+        setAov_returning_customers_per_country(null)
+        setMarketing_spend_per_country(null)
+        setNcac_per_country(null)
+        setContribution_new_per_country(null)
+        setContribution_new_total_per_country(null)
+        setContribution_returning_per_country(null)
+        setContribution_returning_total_per_country(null)
+        setTotal_contribution_per_country(null)
+        setBudget_general(null)
+        setActuals_general(null)
+        setBudget_raw(null)
+        setActuals_markets(null)
+        setActuals_markets_detailed(null)
+        setIsDataReady(false)
+      }
+    })()
+  }, [baseWeek]) // Load from cache or Supabase when week changes
 
   const value: DataCacheContextType = {
     periods,
@@ -675,6 +1044,11 @@ export function DataCacheProvider({ children }: { children: ReactNode }) {
     contribution_returning_per_country,
     contribution_returning_total_per_country,
     total_contribution_per_country,
+    budget_general,
+    actuals_general,
+    budget_raw,
+    actuals_markets,
+    actuals_markets_detailed,
     loading,
     error,
     loadingProgress,

@@ -71,7 +71,6 @@
     --sidebar-border: oklch(0.269 0 0);
     --sidebar-ring: oklch(0.439 0 0);
   }
-
 }
 
 @theme inline {
@@ -122,5 +121,240 @@
   
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Print styles for PDF generation */
+@layer utilities {
+  /* PDF mode styles (not just print) */
+  html[data-pdf="true"] {
+    /* Remove shadows */
+    * {
+      box-shadow: none !important;
+    }
+
+    /* Prevent empty pages - critical for PDF generation */
+    /* Only apply page-break-after: avoid to elements that should not create empty pages */
+    html[data-pdf="true"] body,
+    html[data-pdf="true"] main,
+    html[data-pdf="true"] > body > * {
+      page-break-after: avoid !important;
+    }
+
+    /* Exception: allow page breaks before specific sections if needed */
+    html[data-pdf="true"] .break-before-page {
+      page-break-before: page !important;
+      page-break-after: avoid !important;
+    }
+
+    /* Ensure body and main don't create empty pages */
+    html[data-pdf="true"] body,
+    html[data-pdf="true"] main {
+      page-break-after: avoid !important;
+      page-break-inside: auto !important;
+      height: auto !important;
+      min-height: auto !important;
+      max-height: none !important;
+      overflow: visible !important;
+    }
+
+    /* Prevent empty pages after cards and divs */
+    html[data-pdf="true"] [class*="card"],
+    html[data-pdf="true"] [class*="Card"] {
+      page-break-after: avoid !important;
+      page-break-inside: avoid !important;
+      break-inside: avoid !important;
+      break-after: avoid !important;
+    }
+
+    /* Prevent empty pages after divs, but only the last div on the page */
+    html[data-pdf="true"] div:last-child {
+      page-break-after: avoid !important;
+    }
+
+    /* Optimize table width for A4 landscape (~180mm content area) */
+    table {
+      max-width: 100%;
+      width: 100%;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Prevent page breaks inside table rows */
+    table tbody tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Ensure numeric alignment */
+    .tabular-nums,
+    [class*="text-right"] {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum';
+    }
+
+    /* Page break utilities */
+    .break-before-page {
+      page-break-before: page;
+    }
+
+    .break-after-page {
+      page-break-after: avoid !important; /* Changed from page to avoid */
+    }
+
+    .break-inside-avoid {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    /* Scale down tables if they're too wide - use font-size instead of transform */
+    table {
+      font-size: 6pt !important;
+    }
+
+    /* Make table cells even more compact */
+    table th,
+    table td {
+      padding: 0.05rem 0.25rem !important;
+      line-height: 1.1 !important;
+    }
+
+    /* Reduce padding and spacing for PDF */
+    main {
+      padding: 0.5rem !important; /* Reduced from p-6 (1.5rem) */
+    }
+
+    /* Reduce card padding */
+    [class*="card"] {
+      padding: 0.5rem !important;
+    }
+
+    /* Reduce table cell padding */
+    table th,
+    table td {
+      padding: 0.25rem 0.375rem !important; /* Reduced from py-2 px-2 */
+    }
+
+    /* Reduce spacing between elements */
+    .space-y-8 > * + * {
+      margin-top: 0.5rem !important; /* Reduced from 2rem */
+    }
+
+    .space-y-4 > * + * {
+      margin-top: 0.25rem !important; /* Reduced from 1rem */
+    }
+
+    /* Hide summary info in PDF to save space (already handled in component) */
+  }
+
+  /* Base print styles */
+  @media print {
+    /* Ensure fonts are embedded */
+    * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Remove shadows in print */
+    html[data-pdf="true"] * {
+      box-shadow: none !important;
+    }
+
+            /* Base font size for print (9-10pt equivalent for compact layout) */
+            html[data-pdf="true"] {
+              font-size: 9pt;
+              line-height: 1.3;
+            }
+
+            /* Table optimizations for print */
+            html[data-pdf="true"] table {
+              font-size: 8pt;
+              page-break-inside: auto;
+            }
+
+            html[data-pdf="true"] tr {
+              page-break-inside: avoid;
+              page-break-after: auto;
+            }
+
+            html[data-pdf="true"] td,
+            html[data-pdf="true"] th {
+              padding: 0.125rem 0.25rem !important; /* Very compact */
+            }
+
+            /* Reduce card padding */
+            html[data-pdf="true"] [class*="card"] {
+              padding: 0.25rem !important;
+            }
+
+            /* Reduce main padding */
+            html[data-pdf="true"] main {
+              padding: 0.25rem !important;
+            }
+
+            /* Hide summary info */
+            html[data-pdf="true"] .text-sm.text-gray-600 {
+              display: none !important;
+            }
+
+    /* Ensure numeric alignment */
+    html[data-pdf="true"] .tabular-nums {
+      font-variant-numeric: tabular-nums;
+      font-feature-settings: 'tnum';
+    }
+
+    /* Page break utilities */
+    html[data-pdf="true"] .break-before-page {
+      page-break-before: page;
+    }
+
+    html[data-pdf="true"] .break-after-page {
+      page-break-after: avoid !important; /* Prevent empty pages */
+    }
+
+    html[data-pdf="true"] .break-inside-avoid {
+      page-break-inside: avoid;
+    }
+
+    /* Hide non-essential elements in PDF */
+    html[data-pdf="true"] .no-print {
+      display: none !important;
+    }
+
+    /* Ensure charts fill their containers in PDF mode */
+    html[data-pdf="true"] [data-slot="chart"] {
+      width: 100% !important;
+      height: 100% !important;
+      min-height: 100% !important;
+    }
+
+    html[data-pdf="true"] [data-slot="chart"] .recharts-wrapper {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    html[data-pdf="true"] [data-slot="chart"] .recharts-surface {
+      width: 100% !important;
+      height: 100% !important;
+    }
+
+    /* Remove aspect-video constraint in PDF mode */
+    html[data-pdf="true"] [data-slot="chart"].aspect-video {
+      aspect-ratio: auto !important;
+    }
+
+    /* Prevent empty pages from being created */
+    html[data-pdf="true"] {
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+    }
+
+    /* Ensure content fills the page without creating empty pages */
+    html[data-pdf="true"] body {
+      height: auto !important;
+      min-height: auto !important;
+      overflow: visible !important;
+    }
   }
 }

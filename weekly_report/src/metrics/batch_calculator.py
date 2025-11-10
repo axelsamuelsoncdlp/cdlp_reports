@@ -4,7 +4,7 @@ from typing import Dict, Any
 from pathlib import Path
 from loguru import logger
 
-from weekly_report.src.metrics.table1 import load_all_raw_data, calculate_table1_for_periods
+from weekly_report.src.metrics.table1 import load_all_raw_data, calculate_table1_for_periods_with_ytd
 from weekly_report.src.metrics.markets import calculate_top_markets_for_weeks
 from weekly_report.src.metrics.online_kpis import calculate_online_kpis_for_weeks
 from weekly_report.src.metrics.contribution import calculate_contribution_for_weeks
@@ -79,9 +79,9 @@ def calculate_all_metrics(base_week: str, data_root: Path, num_weeks: int = 8) -
     }
     
     try:
-        # 1. Calculate periods and table1 metrics
-        logger.info("Calculating periods and table1 metrics...")
-        metrics_data = calculate_table1_for_periods(periods, data_root)
+        # 1. Calculate periods and table1 metrics (including YTD)
+        logger.info("Calculating periods and table1 metrics (including YTD)...")
+        metrics_data = calculate_table1_for_periods_with_ytd(periods, data_root)
         results['metrics'] = metrics_data
         
         # 2. Calculate top markets
@@ -124,10 +124,15 @@ def calculate_all_metrics(base_week: str, data_root: Path, num_weeks: int = 8) -
         products_new_data = calculate_top_products_for_weeks(base_week, 1, data_root)
         results['products_new'] = products_new_data
         
-        # 10. Calculate top products (gender)
+        # 10. Calculate top products (gender) - for both men and women
         logger.info("Calculating top products by gender...")
-        products_gender_data = calculate_top_products_by_gender_for_weeks(base_week, 1, data_root)
-        results['products_gender'] = products_gender_data
+        products_gender_men = calculate_top_products_by_gender_for_weeks(base_week, 1, data_root, 'men', 20)
+        products_gender_women = calculate_top_products_by_gender_for_weeks(base_week, 1, data_root, 'women', 20)
+        # Combine into a dictionary structure
+        results['products_gender'] = {
+            'men': products_gender_men,
+            'women': products_gender_women
+        }
         
         # 11. Calculate sessions per country
         logger.info("Calculating sessions per country...")

@@ -6,7 +6,7 @@ import { Loader2 } from 'lucide-react'
 
 interface LoadingProgressProps {
   progress: {
-    step: 'periods' | 'metrics' | 'markets' | 'kpis' | 'complete'
+    step: string
     stepNumber: number
     totalSteps: number
     message: string
